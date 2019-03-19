@@ -1,0 +1,50 @@
+.ql-add-comment {
+  opacity: 0;
+  cursor: pointer;
+  z-index: 101;
+  transition: opacity .25s ease-in-out;
+  border: 1px solid #eee;
+  box-shadow: 0 3px 3px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 100%;
+  top: 0;
+  width: 40px;
+  text-align: center;
+  height: 40px;
+  display: inline;
+  span {
+    display: inline-block;
+    opacity: 0.5;
+    margin-top: 5px;
+    transition: opacity .15s ease-in-out;
+    font-size: 20px;
+  }
+  &:hover {
+    span {
+      opacity: 0;
+    }
+  }
+}
+
+.livex-quill-comment {
+  &::after {
+    content: "\25be";
+    line-height: 1;
+    font-size: 0.8em;
+    display: inline;
+    vertical-align: super;
+    color: rgb(106,168,79);
+  }
+  &::selection {
+    background-color: rgba(217, 191, 88, 1);
+  }
+}
+
+.ql-comment-selection {
+  position: absolute;
+  min-width: 10px;
+  min-height: 20px;
+  top: 0;
+  left: 0;
+  background: rgba(217, 191, 88, 0.5);
+}

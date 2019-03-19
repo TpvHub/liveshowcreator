@@ -1,0 +1,70 @@
+@import "https://fonts.googleapis.com/icon?family=Material+Icons";
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,500');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import "grid.css";
+
+body {
+  font-family: arial, sans-serif;
+  font-size: 13px;
+  color: black;
+  margin: 0;
+  padding: 0;
+  line-height: normal;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+
+.md-icon {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px; /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+
+  /* Support for all WebKit browsers. */
+  -webkit-font-smoothing: antialiased;
+  /* Support for Safari and Chrome. */
+  text-rendering: optimizeLegibility;
+
+  /* Support for Firefox. */
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Support for IE. */
+  font-feature-settings: 'liga';
+}
+
+.drive-dialog {
+  .drive-dialog-actions {
+    margin: 0;
+  }
+  .drive-dialog-title, .drive-dialog-content, .drive-dialog-actions {
+    background: #f2f2f2;
+  }
+}
+
+.document-prompter-dialog {
+  background: #000000;
+  .MuiDialog-paperFullScreen-13 {
+    background: #000000;
+  }
+}
+
+.gfx-index-number {
+  display: inline-block;
+  font-size: 10px;
+  padding:0 1px;
+  font-weight: 700;
+}
+
+.none-out-line-when-focus:focus {
+  outline: none;
+}

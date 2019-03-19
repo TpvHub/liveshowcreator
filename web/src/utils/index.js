@@ -1,0 +1,1 @@
+export { default as FuncUtils } from "./func.util";

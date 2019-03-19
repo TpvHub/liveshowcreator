@@ -1,0 +1,316 @@
+import React from 'react'
+import styled from 'styled-components'
+import { connect } from 'react-redux'
+import { bindActionCreators } from 'redux'
+import {
+  Card,
+  CardActions,
+  CardContent,
+  Button,
+  TextField,
+} from '@material-ui/core'
+import Autocomplete from '../form/autocomplete'
+import Select from '../form/select'
+import _ from 'lodash'
+import DrivePicker from '../form/drive-picker'
+import { ON_SUBMIT_ADD_GFX_CARD, SET_GFX_SELECT, EDIT_GFX } from '../../redux/types'
+import { getCurrentUser, getDocument, getUserSearchList } from '../../redux/selectors'
+import { searchUsers } from '../../redux/actions'
+import GfxFiles from './gfx-files'
+import { STATUSES, gfxTitleMaxLength } from '../../config'
+
+const Container = styled.div `
+  margin: 0 8px;
+  padding: 8px 0 0;
+
+`
+
+class AddGfxCard extends React.Component {
+
+  constructor (props) {
+
+    super(props)
+
+    this.handleSubmit = this.handleSubmit.bind(this)
+    this.getDefaultAssignValue = this.getDefaultAssignValue.bind(this)
+    this.handleCancel = this.handleCancel.bind(this)
+    this.handleRemoveFile = this.handleRemoveFile.bind(this)
+
+    this.state = {
+      title: '',
+      body: '',
+      status: '',
+      assign: [],
+      userId: '',
+      user: null,
+      files: [],
+      documentId: null,
+      created: null,
+      updated: null,
+    }
+
+  }
+
+  handleSubmit () {
+
+    const {event, newGFX, currentUser, users, docId} = this.props
+
+    const userId = _.get(currentUser, '_id')
+    const user = {
+      _id: userId,
+      firstName: _.get(currentUser, 'firstName'),
+      lastName: _.get(currentUser, 'lastName'),
+      avatar: _.get(currentUser, 'avatar'),
+    }
+
+    let card = {
+      title: this.state.title,
+      body: this.state.body,
+      status: this.state.status,
+      assign: users.find(
+        u => u._id === _.get(this.state.assign, '[0].key', '')),
+      userId: this.state.userId ? this.state.userId : userId,
+      user: this.state.user ? this.state.user : user,
+      documentId: docId,
+      files: this.state.files,
+      created: this.state.created ? this.state.created : new Date(),
+      updated: this.state.created ? new Date() : null,
+    }
+
+    event.emit(ON_SUBMIT_ADD_GFX_CARD, {
+      payload: card,
+      range: _.get(newGFX, 'range'),
+    })
+
+    // hide add new card
+    this.props.done()
+
+    // scroll to the added gfx card
+    window.setTimeout(() => this.props.editGfx(card), 10)
+
+  }
+
+  handleCancel () {
+
+    this.props.cancel()
+  }
+
+  componentWillMount () {
+
+    this.props.searchUsers('', {limit: 50, skip: 0})
+  }
+
+  componentDidMount () {
+    const {newGFX, docId} = this.props
+
+    const payload = _.get(newGFX, 'payload')
+
+    const assignUser = _.get(payload, 'assign', null)
+
+    let assign = []
+
+    if (assignUser) {
+      assign.push({
+        label: `${_.get(assignUser, 'firstName', '')} ${_.get(assignUser,
+          'lastName', '')}`,
+        key: _.get(assignUser, '_id'),
+      })
+    }
+
+    // get default title from selection text
+    const defaultTitle = _.truncate(_.trim(_.get(newGFX, 'text', ''), ' \r\n'), {
+      length: gfxTitleMaxLength, // limit the maximum characters
+      omission: ''
+    })
+
+    this.setState({
+      id: _.get(payload, 'id'),
+      title: _.get(payload, 'title', defaultTitle),
+      body: _.get(payload, 'body', ''),
+      status: _.get(payload, 'status', ''),
+      assign: assign,
+      assignUserId: _.get(assignUser, '_id'),
+      userId: _.get(payload, 'userId'),
+      user: _.get(payload, 'user', null),
+      documentId: _.get(payload, 'documentId', docId),
+      files: this.state.files,
+      created: _.get(payload, 'created', null),
+      updated: _.get(payload, 'updated', null),
+    })
+
+    // let scroll to the top
+    const element = document.getElementById(`gfx-item-add`)
+    if (element) {
+      // wait the card expanding before scroll
+      window.setTimeout(() => element.scrollIntoView({block: 'start', behavior: 'smooth'}), 10)
+    }
+  }
+
+  getDefaultAssignValue () {
+
+    return this.state.assign
+  }
+
+  handleRemoveFile (file) {
+
+    let files = this.state.files.filter(
+      (i) => _.get(i, 'id') !== _.get(file, 'id'))
+
+    this.setState({
+      files: files,
+    })
+
+  }
+
+  render () {
+
+    const {newGFX, users, doc} = this.props
+
+
+    let options = []
+
+    users.forEach((u) => {
+      options.push({
+        label: `${u.firstName} ${u.lastName}`,
+        key: u._id,
+      })
+    })
+
+    const driveId = _.get(doc, 'driveId', null)
+
+    return (
+      <Container id={'gfx-item-add'}>
+        {
+          newGFX && (
+            <Card>
+              <CardContent>
+                <div className={'gfx-media'}>
+
+                </div>
+                <div className={'gfx-form'}>
+                  <TextField
+                    onChange={(e) => {
+                      this.setState({
+                        title: e.target.value,
+                      })
+                    }}
+                    fullWidth
+                    label="Title"
+                    id="gfx-input-title"
+                    value={this.state.title}
+                    inputProps={{
+                      maxLength: gfxTitleMaxLength
+                    }}
+                  />
+                  <Autocomplete
+                    label={'Assign'}
+                    defaultValue={this.getDefaultAssignValue()}
+                    onChange={(selected) => {
+
+                      this.setState({
+                        assign: selected,
+                      })
+
+                    }} options={options}/>
+
+                  <Select
+                    label={'Status'}
+                    defaultValue={_.get(newGFX, 'payload.status', '')}
+                    onChange={(selected) => {
+
+                      this.setState(({
+                        status: selected,
+                      }))
+                    }} options={STATUSES}/>
+
+                  <GfxFiles
+                    onRemoveFile={(file) => this.handleRemoveFile(file)}
+                    files={this.state.files}/>
+                  <DrivePicker rootId={driveId} onClose={(event) => {
+
+                    switch (event.type) {
+
+                      case 'ok':
+
+                        // handle update gfx with files
+
+                        let files = this.state.files
+
+                        _.each(_.get(event, 'payload.selected'), (file) => {
+
+                          const isFileExist = files.find(
+                            (i) => _.get(i, 'id') === _.get(file, 'id'))
+                          if (!isFileExist) {
+                            files.push(file)
+                          }
+
+                        })
+
+                        this.setState({
+                          files: files,
+                        })
+
+                        break
+
+                      default:
+
+                        break
+                    }
+                  }}/>
+
+                </div>
+              </CardContent>
+              <CardActions>
+                <Button onClick={this.handleSubmit} color={'primary'}
+                        size="small">Save</Button>
+
+                <Button onClick={this.handleCancel} color={'default'}
+                        size="small">Cancel</Button>
+
+              </CardActions>
+            </Card>
+          )
+        }
+
+      </Container>
+    )
+  }
+}
+
+const mapStateToProps = (state, props) => ({
+  currentUser: getCurrentUser(state),
+  newGFX: state.sidebar.newGFX,
+  event: state.event,
+  users: getUserSearchList(state),
+  doc: getDocument(state, props)
+})
+
+const mapDispatchToProps = (dispatch) => bindActionCreators({
+  searchUsers,
+  editGfx: (card) => {
+    return (dispatch) => {
+      dispatch({
+        type: EDIT_GFX,
+        payload: _.get(card, 'id'),
+      })
+    }
+  },
+  done: () => {
+    return (dispatch) => {
+      dispatch({
+        type: SET_GFX_SELECT,
+        payload: null,
+      })
+    }
+  },
+  cancel: () => {
+    return (dispatch) => {
+      dispatch({
+        type: SET_GFX_SELECT,
+        payload: null,
+      })
+    }
+  },
+}, dispatch)
+
+export default connect(mapStateToProps, mapDispatchToProps)(AddGfxCard)

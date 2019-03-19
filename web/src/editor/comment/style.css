@@ -1,0 +1,44 @@
+.ql-add-comment {
+  opacity: 0;
+  cursor: pointer;
+  z-index: 101;
+  transition: opacity .25s ease-in-out;
+  border: 1px solid #eee;
+  box-shadow: 0 3px 3px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 100%;
+  top: 0;
+  width: 40px;
+  text-align: center;
+  height: 40px; }
+  .ql-add-comment span {
+    display: inline-block;
+    opacity: 0.5;
+    margin-top: 5px;
+    transition: opacity .15s ease-in-out;
+    font-size: 20px; }
+  .ql-add-comment:hover span {
+    opacity: 0; }
+
+.livex-quill-comment {
+  background-color: #faf5b3 !important; 
+   }
+  .livex-quill-comment::after {
+    content: "\2691";
+    line-height: .25;
+    font-size: 1.3em;
+    display: none;
+    vertical-align: super;
+    color: rgb(90, 90, 90); }
+  .livex-quill-comment::selection {
+    background-color: #d9bf58; }
+
+.ql-comment-selection {
+  position: absolute;
+  min-width: 10px;
+  min-height: 20px;
+  top: 0;
+  left: 0;
+  background: rgba(217, 191, 88, 0.5); }
+
+/*# sourceMappingURL=style.css.map */

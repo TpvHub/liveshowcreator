@@ -1,0 +1,20 @@
+.ql-editor {
+  counter-reset: heading-counter;
+}
+
+.ql-editor .livex-heading {
+  text-align: center;
+  text-transform: uppercase;
+  margin: 1em 0;
+}
+
+.ql-editor .livex-heading::before {
+  counter-increment: heading-counter;
+  content: '[' counter(heading-counter, upper-alpha) ' - ';
+  display: inline;
+}
+
+.ql-editor .livex-heading::after {
+  content: ']';
+  display: inline;
+}
