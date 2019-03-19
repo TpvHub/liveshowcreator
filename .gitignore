@@ -8,6 +8,8 @@ server/.env
 service/node_modules
 service/package-lock.json
 
+yarn.lock
+
 .idea
 .idea/*
 .idea/workspace.xml
