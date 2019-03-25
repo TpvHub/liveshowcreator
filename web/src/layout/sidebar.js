@@ -50,12 +50,12 @@ class Sidebar extends React.Component {
         path: '/users',
         roles: ['administrator', 'staff']
       },
-      {
-        label: 'Backups',
-        icon: <Computer/>,
-        path: '/backups',
-        roles: ['administrator']
-      }
+      // {
+      //   label: 'Backups',
+      //   icon: <Computer/>,
+      //   path: '/backups',
+      //   roles: ['administrator']
+      // }
     ]
 
     return (

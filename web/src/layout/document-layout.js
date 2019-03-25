@@ -135,15 +135,16 @@ const SavedStatus = styled.span`
 `
 
 const Logo = styled.div`
-  width: 30px;
-  height: 30px;
+  width: auto;
+  height: 46.3px;
   cursor: pointer;
   margin-right: 10px;
   margin-left: 15px;
   img {
     max-width: 100%;
-    width: 30px;
-    height: 30px;
+    width: auto;
+    height: 100%;
+    border-radius: 8px;
   }
 `
 
@@ -302,6 +303,7 @@ class DocumentLayout extends React.Component {
   isClickingInside = (event) => {
 
     const target = event.target
+    if (!this.notificationTarget || !this.commentTarget || !this.target1) return false
 
     if (this.notificationTarget.contains(target)
       || this.commentTarget.contains(target)
@@ -355,7 +357,7 @@ class DocumentLayout extends React.Component {
 
           </Title>
           <Buttons>
-            <div ref={node => {
+            {/* <div ref={node => {
               this.notificationTarget = node
             }}
             >
@@ -389,9 +391,9 @@ class DocumentLayout extends React.Component {
                   </ClickAwayListener>
                 </Popper>
               </Manager>
-            </div>
+            </div> */}
 
-            <div ref={node => {
+            {/* <div ref={node => {
               this.commentTarget = node
             }}
             >
@@ -421,9 +423,9 @@ class DocumentLayout extends React.Component {
                   </ClickAwayListener>
                 </Popper>
               </Manager>
-            </div>
+            </div> */}
 
-            {canEdit ? <ShareDocument docId={docId} /> : null}
+            {/* {canEdit ? <ShareDocument docId={docId} /> : null} */}
             <UserName>
               <b>{fullname}</b>
             </UserName>

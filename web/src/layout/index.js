@@ -67,7 +67,7 @@ class Layout extends React.Component {
           {this.props.children}
         </Container>
         <Footer>
-          <p className={'app-version'}>Live Show Creator v.{version}</p>
+          <p className={'app-version'}>TpvHub Creator v.{version}</p>
         </Footer>
       </Fragment>
     )
