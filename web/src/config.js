@@ -47,11 +47,12 @@ const productionConfig = {
   fileUrl: 'https://showdev3.tpvhub.net/files',
 }
 const localIp = '127.0.0.1'
+const SERVER_PORT = 3001
 const developmentConfig = {
-  url: `http://${localIp}:3005`,
-  api: `http://${localIp}:3005/api`,
-  webSocketUrl: `ws://${localIp}:3005`,
-  fileUrl: `http://${localIp}:3005/files`,
+  url: `http://${localIp}:${SERVER_PORT}`,
+  api: `http://${localIp}:${SERVER_PORT}/api`,
+  webSocketUrl: `ws://${localIp}:${SERVER_PORT}`,
+  fileUrl: `http://${localIp}:${SERVER_PORT}/files`,
 }
 
 export const config = production ? productionConfig : developmentConfig

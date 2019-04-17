@@ -1,13 +1,13 @@
 import path from 'path'
 
 export const production = process.env.NODE_DEV !== "1"
-export const PORT = 3005
+export const PORT = 3001
 export const jwtSecret = 'tpvhub-$-$-$'
 export const driveDownloadSecretKey = 'e75c55ec-6476-11e8-adc0-fa7ae01bbebc'
 export const backupServicePort = 3006
 export const db = {
   url: 'mongodb://localhost:27017',
-  name: 'tpvhub',
+  name: 'tpvhub-liveshowcreator',
 }
 export const rootUser = {
   firstName: 'TpvHub',
@@ -23,4 +23,4 @@ export const uploadDir = path.join(__dirname, 'storage')
 
 export const url = production
   ? 'https://showdev3.tpvhub.net'
-  : 'http://localhost:3005'
+  : `http://localhost:${PORT}`

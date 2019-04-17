@@ -34,7 +34,8 @@ export default class Database {
       if (this.db) {
         return resolve(this.db)
       }
-      MongoClient.connect(db.url, (err, client) => {
+
+      MongoClient.connect(db.url, { useNewUrlParser: true }, (err, client) => {
         if (err) {
           console.log(err)
           return reject(err)
@@ -42,9 +43,7 @@ export default class Database {
         _this.db = client.db(db.name)
         const _models = this.models()
         return resolve(_models)
-
       })
-
     })
   }
 

@@ -36,10 +36,10 @@
     "uuid": "^3.2.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "REACT_APP_DEV=1 yarn dev",
     "build": "react-scripts build",
-    "dev": "REACT_APP_DEV=1 npm start",
-    "move": "npm run move:build && npm run move:statics-pages",
+    "dev": "react-scripts start",
+    "move": "yarn move:build && yarn move:statics-pages",
     "move:build": "cp -r ./build/* ../server/dist/public/",
     "move:statics-pages": "cp -r ../static-pages ../server/dist/public/",
     "clear": "rm -r ./build",
