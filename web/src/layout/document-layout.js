@@ -357,7 +357,7 @@ class DocumentLayout extends React.Component {
 
           </Title>
           <Buttons>
-            {/* <div ref={node => {
+            <div ref={node => {
               this.notificationTarget = node
             }}
             >
@@ -391,9 +391,9 @@ class DocumentLayout extends React.Component {
                   </ClickAwayListener>
                 </Popper>
               </Manager>
-            </div> */}
+            </div>
 
-            {/* <div ref={node => {
+            <div ref={node => {
               this.commentTarget = node
             }}
             >
@@ -423,9 +423,9 @@ class DocumentLayout extends React.Component {
                   </ClickAwayListener>
                 </Popper>
               </Manager>
-            </div> */}
+            </div>
 
-            {/* {canEdit ? <ShareDocument docId={docId} /> : null} */}
+            {canEdit ? <ShareDocument docId={docId} /> : null}
             <UserName>
               <b>{fullname}</b>
             </UserName>
