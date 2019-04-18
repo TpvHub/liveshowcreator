@@ -11,12 +11,12 @@ const SCOPES = [
   'https://www.googleapis.com/auth/drive.scripts',
 ]
 
-const drive = google.drive({version: 'v3'})
+const drive = google.drive({ version: 'v3' })
 const LIVESHOWCREATOR_TPVHUB_FOLDER_ID = '1ehNIO1H1g7BZwh23LdUbJRwCl5UqZivx'
 
 class GoogleApi {
 
-  constructor () {
+  constructor() {
 
     this.client = null
     this.auth = null
@@ -25,16 +25,16 @@ class GoogleApi {
 
   }
 
-  setupAuthClient () {
+  setupAuthClient() {
 
-    const {private_key, client_email} = credentinal
+    const { private_key, client_email } = credentinal
 
     this.client = new google.auth.JWT({
-        email: client_email,
-        key: private_key,
-        scopes: SCOPES,
-        // subject: OWNER,
-      },
+      email: client_email,
+      key: private_key,
+      scopes: SCOPES,
+      // subject: OWNER,
+    },
     )
 
     google.options({
@@ -43,7 +43,7 @@ class GoogleApi {
 
   }
 
-  async authorize () {
+  async authorize() {
 
     let auth = null
     let authError = null
@@ -78,7 +78,7 @@ class GoogleApi {
    * check auth is expire or not
    * @returns {boolean}
    */
-  isExpiry () {
+  isExpiry() {
 
     const expiry_date = _.get(this.auth, 'expiry_date', -1)
     const currentTimeStamp = Date.now()
@@ -90,7 +90,7 @@ class GoogleApi {
   /**
    * list files in google drive
    */
-  listFiles (q = null) {
+  listFiles(q = null) {
 
     return new Promise(async (resolve, reject) => {
       drive.files.list({
@@ -101,7 +101,7 @@ class GoogleApi {
         if (err) {
           return reject(err)
         }
-        if (!res) return reject(new Error('res.data is not defined')) 
+        if (!res) return reject(new Error('res.data is not defined'))
         return resolve(res.data.files)
 
       })
@@ -110,8 +110,52 @@ class GoogleApi {
 
   }
 
-  emptyTrash () {
+  emptyTrash() {
     return drive.files.emptyTrash({})
+  }
+
+  createClientFolder(teamName, attributes) {
+    return new Promise(async (resolve, reject) => {
+
+      try {
+        const query = `mimeType = 'application/vnd.google-apps.folder'
+ and appProperties has { key='clientId' and value='${attributes.clientId}' } and trashed !=true`
+
+        const fileMetadata = {
+          'name': _.trim(teamName),
+          'mimeType': 'application/vnd.google-apps.folder',
+          'appProperties': attributes,
+          'parents': [LIVESHOWCREATOR_TPVHUB_FOLDER_ID]
+        }
+
+        const findTeamFolder = await this.listFiles(query)
+
+        if (!findTeamFolder || findTeamFolder.length === 0) {
+          drive.files.create({
+            resource: fileMetadata,
+            fields: 'id,appProperties,name'
+          }, function (err, res) {
+
+            if (err) {
+              return reject(err)
+            }
+            return resolve(res.data)
+          })
+
+        } else {
+          // let update folder name
+          const folder = _.get(findTeamFolder, '[0]')
+          this.updateFolderName(folder, teamName).then((data) => {
+            return resolve(data)
+
+          }).catch(err => {
+            return reject(err)
+          })
+        }
+      } catch (err) {
+
+      }
+    })
   }
 
   /**
@@ -120,7 +164,7 @@ class GoogleApi {
    * @param attributes
    * @returns {Promise<any>}
    */
-  async createDocumentFolder (name, attributes) {
+  async createDocumentFolder(name, attributes) {
 
     const query = `mimeType = 'application/vnd.google-apps.folder'
  and appProperties has { key='documentId' and value='${attributes.documentId}' } and trashed !=true`
@@ -167,7 +211,7 @@ class GoogleApi {
    * @param driveId
    * @returns {Promise<any>}
    */
-  async deleteDocumentFolderById (driveId) {
+  async deleteDocumentFolderById(driveId) {
 
     return new Promise((resolve, reject) => {
 
@@ -190,7 +234,7 @@ class GoogleApi {
    * @param id
    * @param name
    */
-  updateFolderName (file, name,) {
+  updateFolderName(file, name, ) {
 
     return new Promise((resolve, reject) => {
 
@@ -217,7 +261,7 @@ class GoogleApi {
    * @param permission
    * @returns {Promise<any>}
    */
-  createPermission (fileId, permission) {
+  createPermission(fileId, permission) {
 
     return new Promise((resolve, reject) => {
 
@@ -241,7 +285,7 @@ class GoogleApi {
    * @param fileId
    * @returns {Promise<any>}
    */
-  async getDownloadUrl (fileId) {
+  async getDownloadUrl(fileId) {
 
     const auth = await this.authorize()
 
@@ -259,7 +303,7 @@ class GoogleApi {
    * @param newFolderId
    * @returns {Promise<any>}
    */
-  async copyFileToNewFolder (arFileId, newFolderId) {
+  async copyFileToNewFolder(arFileId, newFolderId) {
     const arJobs = arFileId.map(_itemFileId => {
       const job = () => drive.files.copy({
         fileId: _itemFileId,
@@ -275,19 +319,19 @@ class GoogleApi {
     });
 
     return Promise.all(arJobs)
-    .then(results => {
-      results = _.map(results, _item => {
-        if (_item) {
-          return _item.data.id;
-        } else {
-          // TODO: check here
-          console.log(_item)
-        }
+      .then(results => {
+        results = _.map(results, _item => {
+          if (_item) {
+            return _item.data.id;
+          } else {
+            // TODO: check here
+            console.log(_item)
+          }
+        });
+        return results;
+      }).catch(err => {
+        return Promise.reject(err);
       });
-      return results;
-    }).catch(err => {
-      return Promise.reject(err);
-    });
 
     // return new Promise((resolve, reject) => {
     //   arFileId.forEach(_itemFileId => {

@@ -1,6 +1,7 @@
 import { MongoClient } from 'mongodb'
 import { db } from './config'
 import User from './models/user'
+import Client from './models/client'
 import Role from './models/role'
 import Token from './models/token'
 import Document from './models/document'
@@ -58,6 +59,7 @@ export default class Database {
 
     this._models = {
       user: new User({database: this}),
+      client: new Client({database: this}),
       role: new Role({database: this}),
       token: new Token({database: this}),
       document: new Document({database: this}),

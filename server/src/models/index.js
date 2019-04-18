@@ -727,7 +727,6 @@ export default class Model {
    * @returns {Promise<any>}
    */
   checkPermissionByRoles (roles = [], accessType = '*') {
-
     let isAllowed = true
     const permissions = this.permissions()
 

@@ -496,7 +496,6 @@ export default class User extends Model {
         type: Email,
         email: true,
         required: true,
-        lowercase: true,
         createIndex: 'text',
       },
       password: {
@@ -508,17 +507,29 @@ export default class User extends Model {
       firstName: {
         type: GraphQLString,
         createIndex: 'text',
+        required: true,
       },
       lastName: {
         type: GraphQLString,
         createIndex: 'text',
+        required: true,
       },
       avatar: {
         type: GraphQLString,
       },
+      phone: {
+        type: GraphQLString,
+        default: null,
+        required: true,
+        minLength: 9,
+      },
       roles: {
         type: GraphQLList(GraphQLString),
         default: [],
+      },
+      status: {
+        type: GraphQLString,
+        default: 'accepted', // pending, accepted, blocked
       },
       created: {
         type: DateTime,
