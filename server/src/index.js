@@ -97,9 +97,11 @@ app.post('/api/copy-files-to-new-folder', async (req, res, next) => {
 app.use('/api', graphqlHTTP(async (request) => {
 
   let tokenId = request.header('authorization')
+
   if (!tokenId) {
     tokenId = _.get(request, 'query.auth', null)
   }
+  
   request.ctx = ctx
   let token = null
 

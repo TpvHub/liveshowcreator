@@ -13,13 +13,15 @@ import Email from '../types/email'
 import DateTime from '../types/datetime'
 import bcrypt from 'bcrypt'
 
+import { composePromise } from '../utils/common'
+
 export default class User extends Model {
 
-  constructor (ctx) {
+  constructor(ctx) {
     super('user', 'user', ctx)
   }
 
-  isTpvHubEmail (email) {
+  isTpvHubEmail(email) {
 
     let emailSplitArr = _.split(email, '@')
 
@@ -38,7 +40,7 @@ export default class User extends Model {
    * @param model
    * @returns {Promise<any>}
    */
-  async beforeSave (id, model) {
+  async beforeSave(id, model) {
     if (!id) {
       let roles = _.get(model, 'roles', [])
       if (this.isTpvHubEmail(_.get(model, 'email'))) {
@@ -59,7 +61,7 @@ export default class User extends Model {
    * @param id
    * @returns {Promise<any>}
    */
-  async getUserRoles (id) {
+  async getUserRoles(id) {
 
     return new Promise(async (resolve, reject) => {
 
@@ -77,7 +79,7 @@ export default class User extends Model {
     })
   }
 
-  login (email, password) {
+  login(email, password) {
 
     return new Promise((resolve, reject) => {
       if (!email || !this.isEmail(email)) {
@@ -88,7 +90,7 @@ export default class User extends Model {
       }
 
       email = _.toLower(email)
-      this.findOne({email: email}).then((model) => {
+      this.findOne({ email: email }).then((model) => {
 
         if (model === null) {
           return reject('Login Error')
@@ -125,7 +127,7 @@ export default class User extends Model {
    * @param token
    * @returns {Promise<any>}
    */
-  logout (token) {
+  logout(token) {
 
     return new Promise((resolve, reject) => {
 
@@ -155,7 +157,7 @@ export default class User extends Model {
    * @param id
    * @param roles
    */
-  async updateUserRoles (id, roles = []) {
+  async updateUserRoles(id, roles = []) {
 
     roles = _.uniq(roles)
     return new Promise(async (resolve, reject) => {
@@ -176,7 +178,7 @@ export default class User extends Model {
 
   }
 
-  query () {
+  query() {
 
     const parentQuery = super.query()
 
@@ -185,10 +187,10 @@ export default class User extends Model {
     const userRersultFieldSchema = new GraphQLObjectType({
       name: 'findUserResult',
       fields: () => ({
-        _id: {type: GraphQLID},
-        firstName: {type: GraphQLString},
-        lastName: {type: GraphQLString},
-        avatar: {type: GraphQLString},
+        _id: { type: GraphQLID },
+        firstName: { type: GraphQLString },
+        lastName: { type: GraphQLString },
+        avatar: { type: GraphQLString },
       }),
     })
 
@@ -225,7 +227,7 @@ export default class User extends Model {
             if (!perm) {
               return reject(this.t('Access denied'))
             }
-            this.database.models().role.find(null, {limit: 0, skip: 0}).then((results) => {
+            this.database.models().role.find(null, { limit: 0, skip: 0 }).then((results) => {
               let roles = []
               for (let i = 0; i < results.length; i++) {
                 roles.push(results[i].name)
@@ -294,7 +296,7 @@ export default class User extends Model {
             },
           }
           if (search) {
-            q = {$text: {$search: search}}
+            q = { $text: { $search: search } }
           }
 
           return new Promise((resolve, reject) => {
@@ -319,8 +321,13 @@ export default class User extends Model {
     return Object.assign(parentQuery, query)
   }
 
-  mutation () {
+  mutation() {
     const parentMutation = super.mutation()
+    const createUserArgs = Object.assign(this.fields(), {
+      clientId: {
+        type: GraphQLID
+      }
+    })
 
     const mutation = {
       login: {
@@ -347,6 +354,87 @@ export default class User extends Model {
           return this.login(_.get(args, 'email'), _.get(args, 'password'))
         },
       },
+
+      create_user: {
+        type: this.schema('mutation'),
+        args: createUserArgs,
+        resolve: (value, args, request) => {
+          return new Promise(async (resolve, reject) => {
+            let hasPerm = false
+            try {
+              hasPerm = await this.checkPermission(request, 'create', null)
+              if (hasPerm) {
+                let newUser = await this.validate(null, args)
+                // client request roles
+                let userRoles = await this.getUserRoles(_.get(request, 'token.userId'))
+
+                // check if create administrator
+                const deepCheckPermission = () => new Promise((rs, rj) => {
+                  if (_.includes(userRoles, 'staff')) {
+                    // Only admin can create administrator and staff
+                    if (
+                      _.includes(newUser.roles, 'administrator') ||
+                      _.includes(newUser.roles, 'staff')
+                    ) return rj('Access denied')
+                  }
+
+                  if (_.includes(userRoles, 'client')) {
+                    // client can only create user
+                    if (
+                      _.includes(newUser.roles, 'administrator') ||
+                      _.includes(newUser.roles, 'staff') ||
+                      _.includes(newUser.roles, 'client')
+                    ) return rj('Access denied')
+                  }
+
+                  if (_.includes(userRoles, 'user')) return rj('Access denied')
+
+                  rs(true)
+                })
+
+                const checkClientCreateUser = (user) => new Promise(async (rs, rj) => {
+                  if (_.includes(user.roles, 'user')) {
+                    let client = await this.database.models().client.findOne(
+                      args.clientId ? {
+                        _id: this.objectId(args.clientId)
+                      } : {
+                          userId: this.objectId(_.get(request, 'token.userId'))
+                        }
+                    )
+                    if (client) {
+                      client = await this.database.models().client.save(client._id, {
+                        teamMembers: _.concat(client.teamMembers, user._id)
+                      })
+
+                      rs(client)
+
+                    } else rj('Client not found!')
+                  } rs()
+                })
+
+                const saveUser = (user) => {
+                  newUser = user
+                  return newUser
+                }
+
+                await composePromise(
+                  newUser => checkClientCreateUser(newUser),
+                  user => saveUser(user),
+                  _ => this.save(null, newUser),
+                  _ => deepCheckPermission()
+                )()
+
+                resolve(newUser)
+
+              } else reject('Access denied')
+
+            } catch (err) {
+              reject(err)
+            }
+          })
+        }
+      },
+
       update_user: {
 
         type: this.schema('mutation'),
@@ -399,7 +487,7 @@ export default class User extends Model {
             let relations = []
             _.each(this.relations(), (v, k) => {
               if (v.type === 'belongTo') {
-                relations.push({name: k, relation: v})
+                relations.push({ name: k, relation: v })
               }
             })
             for (let i in relations) {
@@ -423,7 +511,7 @@ export default class User extends Model {
       updateUserRoles: {
         type: GraphQLList(GraphQLString),
         args: {
-          id: {type: GraphQLNonNull(GraphQLString)},
+          id: { type: GraphQLNonNull(GraphQLString) },
           roles: {
             type: GraphQLList(GraphQLString),
           },
@@ -482,7 +570,7 @@ export default class User extends Model {
     return Object.assign(parentMutation, mutation)
   }
 
-  fields () {
+  fields() {
 
     return {
       _id: {
@@ -516,6 +604,7 @@ export default class User extends Model {
       },
       avatar: {
         type: GraphQLString,
+        default: null,
       },
       phone: {
         type: GraphQLString,
@@ -542,13 +631,13 @@ export default class User extends Model {
     }
   }
 
-  permissions () {
+  permissions() {
 
     return [
       {
         accessType: '*',
         role: 'everyone',
-        permission: 'DENY',
+        permission: 'ALLOW',
       },
       {
         accessType: '*',

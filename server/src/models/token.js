@@ -37,7 +37,6 @@ export default class Token extends Model {
       this.findOne({
         token: token,
       }).then((result) => {
-
         return resolve(result)
       }).catch((err) => {
         return reject('Invalid token')
