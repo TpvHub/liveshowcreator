@@ -5,6 +5,9 @@ import {
     GraphQLString,
     GraphQLID,
     GraphQLList,
+    GraphQLInt,
+    GraphQLFloat,
+    GraphQLObjectType
 } from 'graphql'
 import DateTime from '../types/datetime'
 import Email from '../types/email'
@@ -18,7 +21,88 @@ export default class Client extends Model {
     }
 
     query() {
+        const parentQuery = super.query()
+        const _schema = new GraphQLObjectType({
+            name: 'getClients',
+            fields: () => (Object.assign({
+                email: {
+                    type: Email,
+                },
+                numOfUsers: {
+                    type: GraphQLInt,
+                    default: 0,
+                },
+                numOfUsersOnline: {
+                    type: GraphQLInt,
+                    default: 0,
+                },
+                numOfShows: {
+                    type: GraphQLInt,
+                    default: 0,
+                },
+                driveUsed: {
+                    type: GraphQLFloat,
+                    default: 0.00,
+                },
+                status: {
+                    type: GraphQLString,
+                },
+            }, this.fields())),
+        })
 
+        const query = {
+            getClients: {
+                type: GraphQLList(_schema),
+                args: this.defaultQueryArgs(),
+                resolve: (value, args, request) => {
+                    return new Promise(async (resolve, reject) => {
+                        try {
+                            let filter = {
+                                limit: _.get(args, 'limit', 50),
+                                skip: _.get(args, 'skip', 0),
+                                sort: {
+                                    teamName: 1,
+                                },
+                            }
+
+                            let clients = await this.find(null, filter)
+                            const relations = this.relations()
+
+                            clients = await Promise.all(clients.map(client => new Promise((rs, rj) => {
+                                Promise.all(Object.keys(relations).map(key => new Promise(async (rs, rj) => {
+                                    const relation = relations[key]
+                                    client[key] = await relation.model.findOne({
+                                        [relation.foreignField]: client[relation.localField]
+                                    })
+                                    rs()
+                                }))).then(_ => {
+                                    rs(client)
+                                })
+                            })))
+
+                            clients = clients.map(client => {
+                                client.email = client.user ? client.user.email : null
+                                client.status = client.user ? client.user.status : null
+                                Object.assign(client, {
+                                    numOfUsers: 0,
+                                    numOfUsersOnline: 0,
+                                    numOfShows: 0,
+                                    driveUsed: 0.00
+                                })
+                                return client
+                            })
+
+                            resolve(clients || [])
+
+                        } catch (err) {
+                            reject(err)
+                        }
+                    })
+                }
+            }
+        }
+
+        return Object.assign(parentQuery, query)
     }
 
     mutation() {

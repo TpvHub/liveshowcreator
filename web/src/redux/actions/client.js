@@ -55,24 +55,26 @@ export const getClients = (filter) => {
 
     if (skip !== currentFilter.skip || currentFilter.skip < skip || true) {
       // load clients from api
-      service.query('clients', { limit: limit, skip: skip },
-        getModelFields('client')).then((models) => {
-
-          dispatch({
-            type: SET_CLIENT_MODEL,
-            payload: {
-              models: models,
-              filter: filter,
-            },
-          })
-
-        }).catch(err => {
-
-          return dispatch({
-            type: ERROR,
-            payload: err,
-          })
+      service.query(
+        'getClients',
+        { limit: limit, skip: skip },
+        getModelFields('client')
+      ).then((models) => {
+        dispatch({
+          type: SET_CLIENT_MODEL,
+          payload: {
+            models: models,
+            filter: filter,
+          },
         })
+
+      }).catch(err => {
+
+        return dispatch({
+          type: ERROR,
+          payload: err,
+        })
+      })
     }
 
   }

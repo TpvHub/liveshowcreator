@@ -5,6 +5,7 @@ import drawer from './drawer'
 import doc from './doc'
 import event from './event'
 import sidebar from './sidebar'
+import client from './client'
 import user from './user'
 import userSearch from './user-search'
 import gfx from './gfx'
@@ -40,6 +41,7 @@ export default combineReducers({
   docCount,
   event,
   sidebar,
+  client,
   user,
   userSearch,
   gfx,

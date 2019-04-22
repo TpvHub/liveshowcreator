@@ -17,7 +17,7 @@ import googleApi from '../google/googleapi'
 
 export default class Model {
 
-  constructor (collection, name, ctx) {
+  constructor(collection, name, ctx) {
     this.database = ctx.database
     this.db = ctx.database.db
     this.collection = collection
@@ -26,14 +26,14 @@ export default class Model {
 
   }
 
-  cache_set (id, model) {
+  cache_set(id, model) {
     if (!id || !model) {
       return
     }
     this.cache = this.cache.set(_.toString(id), model)
   }
 
-  cache_remove (id) {
+  cache_remove(id) {
     if (!id) {
       return
     }
@@ -45,7 +45,7 @@ export default class Model {
    * @param name
    * @returns {*}
    */
-  getCollection (name = null) {
+  getCollection(name = null) {
 
     if (name) {
       return this.db.collection(name)
@@ -58,11 +58,11 @@ export default class Model {
    * @param string
    * @returns {*}
    */
-  t (string) {
+  t(string) {
     return string
   }
 
-  objectId (id) {
+  objectId(id) {
 
     if (typeof id === 'string') {
       try {
@@ -75,20 +75,20 @@ export default class Model {
     return id
   }
 
-  objectIdToString (objectId) {
+  objectIdToString(objectId) {
     if (typeof objectId !== 'string') {
       return objectId.toString()
     }
     return objectId
   }
 
-  isEmail (email = '') {
+  isEmail(email = '') {
 
     const regex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
     return regex.test(email)
   }
 
-  insertOne (model) {
+  insertOne(model) {
     return new Promise((resolve, reject) => {
       this.getCollection().insertOne(model, (err, info) => {
 
@@ -107,7 +107,7 @@ export default class Model {
    * @param options
    * @returns {Promise<any>}
    */
-  async get (id, options = null) {
+  async get(id, options = null) {
 
     return new Promise((resolve, reject) => {
       if (!id) {
@@ -123,7 +123,7 @@ export default class Model {
 
       id = this.objectId(id)
 
-      this.getCollection().findOne({_id: id}, options, (err, result) => {
+      this.getCollection().findOne({ _id: id }, options, (err, result) => {
         if (err === null && result) {
           // save to cache
           this.cache_set(id, result)
@@ -142,7 +142,7 @@ export default class Model {
    * @param options
    * @returns {Promise<any>}
    */
-  count (query, options = null) {
+  count(query, options = null) {
     return new Promise((resolve, reject) => {
       this.getCollection().count(query, options, (err, result) => {
         return err ? reject(err) : resolve(result ? result : 0)
@@ -156,10 +156,10 @@ export default class Model {
    * @param filter
    * @returns {Promise<any>}
    */
-  find (query = {}, filter) {
+  find(query = {}, filter) {
     return new Promise((resolve, reject) => {
 
-      const sort = _.get(filter, 'sort', {created: 1})
+      const sort = _.get(filter, 'sort', { created: 1 })
       const options = _.get(filter, 'options', null)
 
       this.getCollection().
@@ -180,7 +180,7 @@ export default class Model {
    * @param options
    * @returns {Promise<any>}
    */
-  findOne (query, options = null) {
+  findOne(query, options = null) {
     return new Promise((resolve, reject) => {
       this.getCollection().findOne(query, options, (err, result) => {
         return err ? reject(err) : resolve(result)
@@ -194,7 +194,7 @@ export default class Model {
    * @param model
    * @returns {Promise<any>}
    */
-  beforeSave (id = null, model) {
+  beforeSave(id = null, model) {
     return new Promise((resolve, reject) => {
       return resolve(model)
     })
@@ -206,7 +206,7 @@ export default class Model {
    * @param model
    * @returns {Promise<any>}
    */
-  afterSave (id = null, model) {
+  afterSave(id = null, model) {
     return new Promise((resolve, reject) => {
 
       return resolve(model)
@@ -221,7 +221,7 @@ export default class Model {
    * @param silent
    * @returns {Promise<any>}
    */
-  async save (id = null, model, silent = false) {
+  async save(id = null, model, silent = false) {
 
     let validationError = null
 
@@ -259,11 +259,11 @@ export default class Model {
               this.cache_set(_.get(model, '_id'), model)
 
               // if (!silent) {
-                this.afterSave(id, model).then(() => {
-                  return resolve(model)
-                }).catch(e => {
-                  return reject(e)
-                })
+              this.afterSave(id, model).then(() => {
+                return resolve(model)
+              }).catch(e => {
+                return reject(e)
+              })
               // }
 
             }
@@ -280,7 +280,7 @@ export default class Model {
           })
 
           this.getCollection().
-            updateOne({_id: id}, {$set: model}, (err, result) => {
+            updateOne({ _id: id }, { $set: model }, (err, result) => {
               if (err || !_.get(result, 'matchedCount')) {
                 return reject(err ? err : 'Model not found')
               }
@@ -317,7 +317,7 @@ export default class Model {
    * @param silent
    * @returns {Promise<*>}
    */
-  async updateAttribute (id, attr, silent = false) {
+  async updateAttribute(id, attr, silent = false) {
 
     let model = await this.get(id)
 
@@ -329,7 +329,7 @@ export default class Model {
 
   }
 
-  async beforeDelete (id) {
+  async beforeDelete(id) {
     // remove folder here
     if (this.name === 'document') {
       this.get(id).then((res) => {
@@ -345,13 +345,13 @@ export default class Model {
     })
   }
 
-  async afterDelete (id) {
+  async afterDelete(id) {
     return new Promise((resolve, reject) => {
       return resolve(id)
     })
   }
 
-  delete (id) {
+  delete(id) {
 
     return new Promise((resolve, reject) => {
       if (!id) {
@@ -360,7 +360,7 @@ export default class Model {
       id = this.objectId(id)
 
       this.beforeDelete(id).then(() => {
-        this.getCollection().deleteOne({_id: id}, (err, result) => {
+        this.getCollection().deleteOne({ _id: id }, (err, result) => {
           if (err === null) {
 
             // remove from cache
@@ -385,12 +385,12 @@ export default class Model {
    * @param query
    * @returns {Promise<any>}
    */
-  aggregate (query) {
+  aggregate(query) {
 
     return new Promise((resolve, reject) => {
 
       this.getCollection().
-        aggregate(query, {allowDiskUse: true}, (err, result) => {
+        aggregate(query, { allowDiskUse: true }, (err, result) => {
           if (err) {
             return reject(err)
           }
@@ -403,7 +403,7 @@ export default class Model {
     })
   }
 
-  async validate (id = null, model) {
+  async validate(id = null, model) {
 
     const fields = this.fields()
     let data = {}
@@ -434,7 +434,7 @@ export default class Model {
         fieldValue = _.toLower(fieldValue)
       }
       if (isPassword) {
-        passwordFields.push({name: fieldName, value: fieldValue})
+        passwordFields.push({ name: fieldName, value: fieldValue })
       }
       if (isPassword && id === null &&
         (!fieldValue || fieldValue === '' || fieldValue.length < isMinLength)) {
@@ -463,7 +463,7 @@ export default class Model {
         error.push(`${fieldName} must email valid`)
       }
       if (isUnique) {
-        uniqueFields.push({name: fieldName, value: fieldValue})
+        uniqueFields.push({ name: fieldName, value: fieldValue })
       }
     })
 
@@ -502,7 +502,7 @@ export default class Model {
 
           let subQuery = {}
 
-          subQuery[fieldName] = {$eq: fieldValue}
+          subQuery[fieldName] = { $eq: fieldValue }
           orQuery.push(subQuery)
           uniqueFieldNames.push(f.name)
 
@@ -512,10 +512,10 @@ export default class Model {
           $and: [],
         }
 
-        query.$and.push({$or: orQuery})
+        query.$and.push({ $or: orQuery })
 
         if (id) {
-          query.$and.push({_id: {$ne: this.objectId(id)}})
+          query.$and.push({ _id: { $ne: this.objectId(id) } })
 
         }
 
@@ -554,7 +554,7 @@ export default class Model {
    * @param id
    * @returns {Promise<any>}
    */
-  async roleRegister (req, accessType = '', id = null) {
+  async roleRegister(req, accessType = '', id = null) {
 
     const userId = _.get(req, 'token.userId')
     let model = null
@@ -591,7 +591,7 @@ export default class Model {
 
   }
 
-  async upload (req, allowExtensions = [
+  async upload(req, allowExtensions = [
     'image/png',
     'image/jpg',
     'image/jpeg',
@@ -695,7 +695,7 @@ export default class Model {
    * @param accessType
    * @param id
    */
-  async checkPermission (req, accessType = '*', id = null) {
+  async checkPermission(req, accessType = '*', id = null) {
 
     const userId = _.get(req, 'token.userId')
 
@@ -726,7 +726,7 @@ export default class Model {
    * @param accessType
    * @returns {Promise<any>}
    */
-  checkPermissionByRoles (roles = [], accessType = '*') {
+  checkPermissionByRoles(roles = [], accessType = '*') {
     let isAllowed = true
     const permissions = this.permissions()
 
@@ -755,11 +755,24 @@ export default class Model {
 
   }
 
+  defaultQueryArgs() {
+    return {
+      limit: {
+        type: GraphQLInt,
+        defaultValue: 50,
+      },
+      skip: {
+        type: GraphQLInt,
+        defaultValue: 0,
+      }
+    }
+  }
+
   /**
    * GraphQL queries
    * @returns {{[p: string]: *}}
    */
-  query () {
+  query() {
 
     const name = this.name
 
@@ -914,7 +927,7 @@ export default class Model {
                         _id: localId,
                       }
                       relationResult = await relationSetting.model.find(
-                        findQuery, {skip: 0, limit: 50})
+                        findQuery, { skip: 0, limit: 50 })
                     } catch (e) {
 
                     }
@@ -968,7 +981,7 @@ export default class Model {
    * @returns {{[p: string]: *}}
    */
 
-  mutation () {
+  mutation() {
 
     const _schema = this.schema('mutation')
     let fields = this.fields('mutation')
@@ -1013,7 +1026,7 @@ export default class Model {
 
             _.each(this.relations(), (v, k) => {
               if (v.type === 'belongTo') {
-                relations.push({name: k, relation: v})
+                relations.push({ name: k, relation: v })
               }
             })
             for (let i in relations) {
@@ -1071,7 +1084,7 @@ export default class Model {
             let relations = []
             _.each(this.relations(), (v, k) => {
               if (v.type === 'belongTo') {
-                relations.push({name: k, relation: v})
+                relations.push({ name: k, relation: v })
               }
             })
             for (let i in relations) {
@@ -1139,7 +1152,7 @@ export default class Model {
    * @param name
    * @returns {GraphQLObjectType}
    */
-  schema (name = 'mutation') {
+  schema(name = 'mutation') {
 
     if (this._schema) {
       return this._schema
@@ -1189,7 +1202,7 @@ export default class Model {
   /**
    * Model Fields
    */
-  fields (name) {
+  fields(name) {
 
     return {
       _id: {
@@ -1206,7 +1219,7 @@ export default class Model {
    * Default permission
    * @returns {*[]}
    */
-  permissions () {
+  permissions() {
 
     return [
       {
@@ -1236,7 +1249,7 @@ export default class Model {
    * Implement relations
    * @returns {{}}
    */
-  relations () {
+  relations() {
     return {}
   }
 

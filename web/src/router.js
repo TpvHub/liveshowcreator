@@ -4,6 +4,7 @@ import Login from './components/login'
 import ForgotPassword from './components/forgot-password'
 import Authenticate from './components/authenticate'
 import Users from './components/users'
+import Clients from './components/clients'
 import EditUser from './components/users/edit-user'
 import EditDocument from './components/documents/edit-document'
 import Backups from './components/backups'
@@ -28,6 +29,10 @@ export const routes = [
   {
     path: '/users',
     component: Authenticate(Users)
+  },
+  {
+    path: '/clients',
+    component: Authenticate(Clients)
   },
   {
     path: '/users/create',

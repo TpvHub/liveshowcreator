@@ -11,7 +11,7 @@ const initState = {
   models: new OrderedMap(),
   filter: {
     limit: 50,
-    skip: null,
+    skip: 0,
   },
   search: '',
   clientRichInfo: new OrderedMap(),

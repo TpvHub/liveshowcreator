@@ -152,3 +152,11 @@ export const SET_CINEMA_VIEW = 'cinema-view/set_cinema_view'
 // Loading Dialog
 
 export const SHOW_LOADING_DIALOG = 'loading-dialog/show_loading_dialog'
+
+// Client
+export const SET_CURRENT_CLIENT = 'client/SET_CURRENT_CLIENT'
+export const SET_CLIENT_MODEL = 'client/SET_CLIENT_MODEL'
+export const DELETE_CLIENT_MODEL = 'client/DELETE_CLIENT_MODEL'
+export const SET_CLIENTS_SEARCH = 'client/SET_CLIENTS_SEARCH'
+export const SET_CLIENT_RICH_INFO = 'client/SET_CLIENT_RICH_INFO'
+export const DELETE_CLIENT_RICH_INFO = 'client/DELETE_CLIENT_RICH_INFO'

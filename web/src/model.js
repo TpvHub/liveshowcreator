@@ -1,3 +1,14 @@
+const clientField = {
+  _id: {},
+  teamName: {},
+  email: {},
+  numOfUsers: {},
+  numOfUsersOnline: {},
+  numOfShows: {},
+  driveUsed: {},
+  status: {},
+}
+
 const userField = {
   _id: {},
   firstName: {},
@@ -12,6 +23,7 @@ const userField = {
 
 export const models = {
   user: userField,
+  client: clientField,
   user_role: {
     _id: {},
     roleId: {},

@@ -10,9 +10,9 @@ import _ from 'lodash'
 
 class Sidebar extends React.Component {
 
-  checkAccess (roles) {
+  checkAccess(roles) {
 
-    const {user} = this.props
+    const { user } = this.props
     let userRoles = _.get(user, 'roles', [])
 
     if (userRoles === null) {
@@ -32,46 +32,46 @@ class Sidebar extends React.Component {
     })
 
     return allow
-
   }
 
-  render () {
+  render() {
 
     const items = [
+      // Teams, Members, Shows
       {
         label: 'Shows',
-        icon: <DashboardIcon/>,
+        icon: <DashboardIcon />,
         path: '/',
         roles: ['*']
       },
       {
-        label: 'Members',
-        icon: <SupervisorAccount/>,
-        path: '/users',
+        label: 'Clients',
+        icon: <SupervisorAccount />,
+        path: '/clients',
         roles: ['administrator', 'staff']
       },
-      // {
-      //   label: 'Backups',
-      //   icon: <Computer/>,
-      //   path: '/backups',
-      //   roles: ['administrator']
-      // }
+      {
+        label: 'Members',
+        icon: <SupervisorAccount />,
+        path: '/users',
+        roles: ['client', 'user']
+      },
     ]
 
     return (
-      <List style={{width: 250}}>
+      <List style={{ width: 250 }}>
         {
           items.map((item, index) => {
 
             const accessible = this.checkAccess(_.get(item, 'roles', []))
             return accessible ? (
-              <ListItem key={'ListItem'+item.label} button onClick={() => {
+              <ListItem key={'ListItem' + item.label} button onClick={() => {
                 history.push(`${item.path}`)
               }}>
                 <ListItemIcon>
                   {item.icon}
                 </ListItemIcon>
-                <ListItemText primary={`${item.label}`}/>
+                <ListItemText primary={`${item.label}`} />
               </ListItem>
             ) : null
           })

@@ -19,15 +19,15 @@ import { bindActionCreators } from 'redux'
 import styled from 'styled-components'
 import {
   getVisibleClients,
-  getUsersOnlineList,
-  getClientRichInfoList
+  // getUsersOnlineList,
+  // getClientRichInfoList
 } from '../../redux/selectors'
 import {
-  deleteClient,
+  // deleteClient,
   getClients,
-  getListUsersOnline,
-  getClientRichInfo,
-  deleteClientRichInfo
+  // getListUsersOnline,
+  // getClientRichInfo,
+  // deleteClientRichInfo
 } from '../../redux/actions'
 import { history } from '../../hostory'
 // import { config } from '../../config'
@@ -73,48 +73,48 @@ class Clients extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const {
-      clientRichInfoList,
-      clients,
-      usersOnlineList
-    } = nextProps
+    // const {
+    //   clientRichInfoList,
+    //   clients,
+    //   usersOnlineList
+    // } = nextProps
 
-    const { teamDriveModel } = this.state
-    if (clients.size == 0) {
-      teamDriveModel.clear();
-    } else {
-      clientRichInfoList.toArray().forEach(_item => {
-        if (teamDriveModel.get(_item._id)) {
-          teamDriveModel.set(_item._id, Object.assign(teamDriveModel.get(_item._id), _item))
-        }
-      })
+    // const { teamDriveModel } = this.state
+    // if (clients.size == 0) {
+    //   teamDriveModel.clear();
+    // } else {
+    //   clientRichInfoList.toArray().forEach(_item => {
+    //     if (teamDriveModel.get(_item._id)) {
+    //       teamDriveModel.set(_item._id, Object.assign(teamDriveModel.get(_item._id), _item))
+    //     }
+    //   })
 
-      clients.toArray().forEach(_item => {
-        teamDriveModel.set(_item.teamdriveId, Object.assign(teamDriveModel.get(_item.teamdriveId) || {}, _item))
-      })
+    //   clients.toArray().forEach(_item => {
+    //     teamDriveModel.set(_item.teamdriveId, Object.assign(teamDriveModel.get(_item.teamdriveId) || {}, _item))
+    //   })
 
-      usersOnlineList.toArray().forEach(_item => {
-        const lastItem = teamDriveModel.get(_item.teamdriveId) || {}
-        const totalOnline = _.get(lastItem, 'totalOnline', 0) + 1
-        const oldUsersOnline = _.get(lastItem, 'usersOnline', [])
-        if (oldUsersOnline.filter(u => u._id === _item._id).length === 0) {
-          const usersOnline = [...oldUsersOnline, _item]
-          teamDriveModel.set(_item.teamdriveId, Object.assign(lastItem, { totalOnline, usersOnline }))
-        }
-      })
-    }
+    //   usersOnlineList.toArray().forEach(_item => {
+    //     const lastItem = teamDriveModel.get(_item.teamdriveId) || {}
+    //     const totalOnline = _.get(lastItem, 'totalOnline', 0) + 1
+    //     const oldUsersOnline = _.get(lastItem, 'usersOnline', [])
+    //     if (oldUsersOnline.filter(u => u._id === _item._id).length === 0) {
+    //       const usersOnline = [...oldUsersOnline, _item]
+    //       teamDriveModel.set(_item.teamdriveId, Object.assign(lastItem, { totalOnline, usersOnline }))
+    //     }
+    //   })
+    // }
 
-    teamDriveModel.delete('0')
+    // teamDriveModel.delete('0')
 
-    this.setState({ teamDriveModel })
+    // this.setState({ teamDriveModel })
 
   }
 
   componentDidMount() {
     const filter = { limit: 50, skip: 0 }
     this.props.getClients(filter)
-    this.props.getListUsersOnline()
-    this.props.getClientRichInfo()
+    // this.props.getListUsersOnline()
+    // this.props.getClientRichInfo()
 
   }
 
@@ -138,6 +138,7 @@ class Clients extends React.Component {
 
   render() {
     const { teamDriveModel } = this.state
+    const { clients } = this.props
     // let teamDrive, permission = []
 
     const menuOptions = [
@@ -146,30 +147,43 @@ class Clients extends React.Component {
     ]
 
     return (
-      <Layout fullWidth>
+      <Layout>
         <Container>
           <Table>
             <TableHead>
               <TableRow>
                 <TableCell>#</TableCell>
-                <TableCell>Client Name</TableCell>
-                <TableCell>Company</TableCell>
+                <TableCell>Team's Name</TableCell>
+                <TableCell>Email</TableCell>
                 <TableCell>Users</TableCell>
                 <TableCell>Online</TableCell>
                 <TableCell>Shows</TableCell>
                 <TableCell>Drive Use</TableCell>
-                <TableCell>Last Access</TableCell>
+                <TableCell>Status</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {teamDriveModel && Array.from(teamDriveModel.values()).map((n, index) => {
+              {clients.map((n, index) => {
                 // console.log(n);
+
+                const _id = _.get(n, '_id', null)
+                const teamName = _.get(n, 'teamName', null)
+                const email = _.get(n, 'email', null)
+                const numOfUsers = _.get(n, 'numOfUsers', 0)
+                const numOfUsersOnline = _.get(n, 'numOfUsersOnline', 0)
+                const numOfShows = _.get(n, 'numOfShows', 0)
+                const driveUsed = _.get(n, 'driveUsed', 0.00)
+                const status = _.get(n, 'status', 'pending')
+
                 const userAvatar = _.get(n, 'avatar', null)
-                const company = _.get(n, 'company', "")
-                let name = `${_.get(n, 'firstName')} ${_.get(n, 'lastName')}`
+
+                // const company = _.get(n, 'company', "")
+                // let name = `${_.get(n, 'firstName')} ${_.get(n, 'lastName')}`
+
+
                 return (
-                  <TableRow key={'Table_Client_' + name + company}>
+                  <TableRow key={'Table_Client_' + teamName + _id}>
                     <TableCell>
                       <IconButton
                         onClick={() => this.goToProfile(n)}
@@ -184,16 +198,19 @@ class Clients extends React.Component {
                       </IconButton>
                     </TableCell>
                     <TableCell>
-                      {name}
+                      {teamName}
                     </TableCell>
                     <TableCell>
-                      {company}
+                      {email}
                     </TableCell>
-                    <TableCell style={{ cursor: "pointer" }} onClick={() => this.goToUserPage(n)}>{_.get(n, 'userCount', 0)}</TableCell>
-                    <TableCell>{_.get(n, 'totalOnline', 0)}</TableCell>
-                    <TableCell>{_.get(n, 'showCount', 0)}</TableCell>
-                    <TableCell>{_.get(n, 'driveSize', 0)} MB</TableCell>
-                    <TableCell>{'N/A'}</TableCell>
+
+                    <TableCell style={{ cursor: "pointer" }} onClick={() => this.goToUserPage(n)}>{numOfUsers}</TableCell>
+                    <TableCell>{numOfUsersOnline}</TableCell>
+                    <TableCell>{numOfShows}</TableCell>
+                    <TableCell>{driveUsed}</TableCell>
+                    
+                    <TableCell>{status}</TableCell>
+
                     <TableCell numeric>
                       <MenuAction onSelect={(op) => {
                         switch (op.key) {
@@ -224,7 +241,7 @@ class Clients extends React.Component {
               })}
             </TableBody>
           </Table>
-          <ConfirmDeleteDialog onClose={(action) => {
+          {/* <ConfirmDeleteDialog onClose={(action) => {
             switch (action) {
               case 'delete':
                 this.props.deleteClient(
@@ -249,7 +266,7 @@ class Clients extends React.Component {
               deleteModel: null,
             })
 
-          }} open={!!this.state.deleteModel} />
+          }} open={!!this.state.deleteModel} /> */}
           <CreateUserButton>
             <Tooltip id="tooltip-left-end" title="Create client account"
               placement="left-end">
@@ -267,16 +284,16 @@ class Clients extends React.Component {
 
 const mapStateToProps = (state) => ({
   clients: getVisibleClients(state),
-  clientRichInfoList: getClientRichInfoList(state),
-  usersOnlineList: getUsersOnlineList(state),
+  // clientRichInfoList: getClientRichInfoList(state),
+  // usersOnlineList: getUsersOnlineList(state),
 })
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   getClients,
-  deleteClient,
-  getListUsersOnline,
-  getClientRichInfo,
-  deleteClientRichInfo
+  // deleteClient,
+  // getListUsersOnline,
+  // getClientRichInfo,
+  // deleteClientRichInfo
 }, dispatch)
 
 export default connect(

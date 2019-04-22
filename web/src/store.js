@@ -1,5 +1,5 @@
 import thunk from 'redux-thunk'
-import { createStore, applyMiddleware } from 'redux'
+import { createStore, applyMiddleware, compose } from 'redux'
 import reducers from './redux/reducers'
 import Service from './service'
 import PubSubClient from './pubsub'
@@ -14,12 +14,17 @@ const google = new Google()
 //assign service to google auth
 google.setService(service)
 
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+
+
 export const pubSub = new PubSubClient(config.webSocketUrl,
   {connect: true, reconnect: true})
 
 export const store = createStore(
   reducers,
-  applyMiddleware(thunk.withExtraArgument({service, pubSub, google})),
+  composeEnhancers(
+    applyMiddleware(thunk.withExtraArgument({service, pubSub, google})),
+  )
 )
 
 let token = null
