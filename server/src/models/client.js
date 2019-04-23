@@ -68,29 +68,38 @@ export default class Client extends Model {
                             let clients = await this.find(null, filter)
                             const relations = this.relations()
 
-                            clients = await Promise.all(clients.map(client => new Promise((rs, rj) => {
-                                Promise.all(Object.keys(relations).map(key => new Promise(async (rs, rj) => {
+                            clients = await Promise.all(clients.map(client => new Promise(async (rs, rj) => {
+                                const relationsData = await Promise.all(Object.keys(relations).map(key => new Promise(async (rs, rj) => {
                                     const relation = relations[key]
-                                    client[key] = await relation.model.findOne({
+                                    const value = await relation.model.findOne({
                                         [relation.foreignField]: client[relation.localField]
                                     })
-                                    rs()
-                                }))).then(_ => {
-                                    rs(client)
-                                })
-                            })))
+                                    rs({
+                                        key,
+                                        value
+                                    })
+                                })))
 
-                            clients = clients.map(client => {
+                                relationsData.map(({ key, value }) => {
+                                    client[key] = value
+                                })
+
+                                const numOfShows = client.user ? await this.database.models().document.count({
+                                    userId: this.objectId(client.user._id)
+                                }) : 0
+
                                 client.email = client.user ? client.user.email : null
                                 client.status = client.user ? client.user.status : null
+
                                 Object.assign(client, {
-                                    numOfUsers: 0,
+                                    numOfUsers: client.teamMembers.length || 0,
                                     numOfUsersOnline: 0,
-                                    numOfShows: 0,
+                                    numOfShows,
                                     driveUsed: 0.00
                                 })
-                                return client
-                            })
+
+                                rs(client)
+                            })))
 
                             resolve(clients || [])
 

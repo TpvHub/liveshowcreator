@@ -165,8 +165,6 @@ class Clients extends React.Component {
             </TableHead>
             <TableBody>
               {clients.map((n, index) => {
-                // console.log(n);
-
                 const _id = _.get(n, '_id', null)
                 const teamName = _.get(n, 'teamName', null)
                 const email = _.get(n, 'email', null)
@@ -178,9 +176,7 @@ class Clients extends React.Component {
 
                 const userAvatar = _.get(n, 'avatar', null)
 
-                // const company = _.get(n, 'company', "")
                 // let name = `${_.get(n, 'firstName')} ${_.get(n, 'lastName')}`
-
 
                 return (
                   <TableRow key={'Table_Client_' + teamName + _id}>
