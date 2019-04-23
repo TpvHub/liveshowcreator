@@ -17,7 +17,11 @@ import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import styled from 'styled-components'
 import { getVisibleUsers } from '../../redux/selectors'
-import { deleteUser, getUsers } from '../../redux/actions'
+import { 
+  deleteUser, 
+  getUsers,
+  getUsersByClient
+} from '../../redux/actions'
 import { history } from '../../hostory'
 import MenuAction from '../menu-action'
 import ConfirmDeleteDialog from '../documents/confirm-delete-dialog'
@@ -83,9 +87,22 @@ class Users extends React.Component {
     }
   }
 
-  componentWillMount() {
+  componentDidMount() {
+    this.getUsers(this.props)
+  }
+
+  getUsers = (props) => {
     const filter = { limit: 50, skip: 0 }
-    this.props.getUsers(filter)
+
+    const clientId = _.get(props.match.params, 'clientId', null)
+    if (clientId) {
+      // Get Users by Client
+      props.getUsersByClient(clientId, filter)
+
+    } else {
+      // Get all users
+      props.getUsers(filter)
+    }
   }
 
   goToProfile(user) {
@@ -126,6 +143,7 @@ class Users extends React.Component {
                 <TableCell onClick={this.handleSort('name')}>Name</TableCell>
                 <TableCell onClick={this.handleSort('email')}>Email</TableCell>
                 <TableCell onClick={this.handleSort('role')}>Roles</TableCell>
+                <TableCell onClick={this.handleSort('status')}>Status</TableCell>
                 <TableCell onClick={this.handleSort('updated')} numeric>Last modified</TableCell>
                 <TableCell numeric>Actions</TableCell>
               </TableRow>
@@ -157,6 +175,7 @@ class Users extends React.Component {
                     </TableCell>
                     <TableCell>{_.get(n, 'email')}</TableCell>
                     <TableCell>{_.get(n, 'role')}</TableCell>
+                    <TableCell>{_.get(n, 'status')}</TableCell>
                     <TableCell numeric>{n.updated &&
                       moment(_.get(n, 'updated')).format('LLL')}</TableCell>
                     <TableCell numeric>
@@ -230,6 +249,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   getUsers,
+  getUsersByClient,
   deleteUser,
 }, dispatch)
 

@@ -16,9 +16,10 @@ const userField = {
   avatar: {},
   email: {},
   password: {},
+  roles: {},
+  status: {},
   created: {},
   updated: {},
-  roles: {}
 }
 
 export const models = {

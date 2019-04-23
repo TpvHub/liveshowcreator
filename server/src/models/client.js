@@ -22,7 +22,8 @@ export default class Client extends Model {
 
     query() {
         const parentQuery = super.query()
-        const _schema = new GraphQLObjectType({
+        
+        const getClientsSchema = new GraphQLObjectType({
             name: 'getClients',
             fields: () => (Object.assign({
                 email: {
@@ -52,7 +53,7 @@ export default class Client extends Model {
 
         const query = {
             getClients: {
-                type: GraphQLList(_schema),
+                type: GraphQLList(getClientsSchema),
                 args: this.defaultQueryArgs(),
                 resolve: (value, args, request) => {
                     return new Promise(async (resolve, reject) => {

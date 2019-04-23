@@ -135,7 +135,7 @@ class UserForm extends React.Component {
             this.props.createUser(model).then(() => {
 
               if (_.includes(userRolesValues, 'administrator') || _.includes(userRolesValues, 'staff')) {
-                history.push('/users')
+                history.goBack()
               } else {
                 history.push('/')
               }
@@ -150,7 +150,7 @@ class UserForm extends React.Component {
 
             this.props.updateUser(model).then(() => {
               if (_.includes(userRolesValues, 'administrator') || _.includes(userRolesValues, 'staff')) {
-                history.push('/users')
+                history.goBack()
               } else {
                 history.push('/')
               }

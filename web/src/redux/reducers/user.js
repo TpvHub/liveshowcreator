@@ -30,6 +30,7 @@ export default (state = initState, action) => {
       }
 
     case SET_USER_MODEL:
+      immutableList = immutableList.clear()
 
       let users = _.get(payload, 'models')
       let filter = _.get(payload, 'filter', state.filter)

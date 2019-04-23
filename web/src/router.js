@@ -35,6 +35,10 @@ export const routes = [
     component: Authenticate(Clients)
   },
   {
+    path: '/clients/:clientId/users',
+    component: Authenticate(Users)
+  },
+  {
     path: '/users/create',
     component: Authenticate(AddUser)
   },

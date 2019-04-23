@@ -129,7 +129,7 @@ class Clients extends React.Component {
   }
 
   goToUserPage = (client) => {
-    history.push(`/clients/${client.teamdriveId}/users`)
+    history.push(`/clients/${client._id}/users`)
   }
 
   handleCreateAccount() {

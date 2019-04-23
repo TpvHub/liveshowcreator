@@ -184,17 +184,10 @@ export const loginWithToken = (token) => {
  */
 export const getUsers = (filter) => {
   return (dispatch, getState, { service }) => {
-
-    const state = getState()
-
-    const currentFilter = state.user.filter
-
     const limit = _.get(filter, 'limit', 0)
     const skip = _.get(filter, 'skip', 50)
 
-    if (skip !== currentFilter.skip || currentFilter.skip < skip) {
-      // load users from api
-      service.query('users', { limit: limit, skip: skip },
+    service.query('users', { limit: limit, skip: skip },
         getModelFields('user')).then((models) => {
 
           dispatch({
@@ -212,8 +205,37 @@ export const getUsers = (filter) => {
             payload: err,
           })
         })
-    }
 
+  }
+}
+
+/**
+ * get users by client id
+ * @param {*} clientId 
+ * @param {*} filter 
+ */
+
+export const getUsersByClient = (clientId, filter) => {
+  return (dispatch, getState, { service }) => {
+    const limit = _.get(filter, 'limit', 0)
+    const skip = _.get(filter, 'skip', 50)
+
+    service.query('getUsersByClient', { limit, skip, clientId },
+      getModelFields('user')).then((models) => {
+        console.log(models)
+        dispatch({
+          type: SET_USER_MODEL,
+          payload: {
+            models: models,
+            filter: filter,
+          },
+        })
+      }).catch(err => {
+        return dispatch({
+          type: ERROR,
+          payload: err,
+        })
+      })
   }
 }
 

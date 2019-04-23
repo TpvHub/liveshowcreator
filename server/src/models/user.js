@@ -194,6 +194,11 @@ export default class User extends Model {
       }),
     })
 
+    const getUsersByClientSchema = new GraphQLObjectType({
+      name: 'getUsersByClient',
+      fields: this.fields,
+    })
+
     const query = {
       me: {
         type: _schema,
@@ -316,6 +321,29 @@ export default class User extends Model {
         },
       },
 
+      getUsersByClient: {
+        type: GraphQLList(getUsersByClientSchema),
+        args: Object.assign(this.defaultQueryArgs(), {
+          clientId: { type: GraphQLID }
+        }),
+        resolve: (value, args, request) => {
+          return new Promise(async (resolve, reject) => {
+            try {
+              const client = await this.database.models().client.findOne({
+                _id: this.objectId(args.clientId)
+              })
+
+              const users = await Promise.all(client.teamMembers.map(userId => {
+                return this.get(userId)
+              }))
+
+              resolve(users)
+            } catch (err) {
+              reject(err)
+            }
+          })
+        }
+      }
     }
 
     return Object.assign(parentQuery, query)
