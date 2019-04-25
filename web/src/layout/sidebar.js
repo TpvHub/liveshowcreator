@@ -51,6 +51,12 @@ class Sidebar extends React.Component {
         roles: ['administrator', 'staff']
       },
       {
+        label: 'Users',
+        icon: <SupervisorAccount />,
+        path: '/users',
+        roles: ['administrator', 'staff']
+      },
+      {
         label: 'Members',
         icon: <SupervisorAccount />,
         path: '/users',
