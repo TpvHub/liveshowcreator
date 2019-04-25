@@ -193,7 +193,8 @@ class LoginForm extends React.Component {
             Login
           </Button>
           <Typography className={'login-optional-or'}>Or</Typography>
-          <a href={`${config.url}/auth/google`}>
+          {/* <a href={`${config.url}/auth/google`}> */}
+          <a href={`/register`}>
             <Button
               variant="raised"
               type={'button'}

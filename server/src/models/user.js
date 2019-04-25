@@ -646,7 +646,7 @@ export default class User extends Model {
       },
       status: {
         type: GraphQLString,
-        default: 'accepted', // pending, accepted, blocked
+        default: 'pending', // pending, accepted, blocked
       },
       created: {
         type: DateTime,

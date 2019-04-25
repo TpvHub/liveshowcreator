@@ -43,11 +43,11 @@ class ClientForm extends React.Component {
       model: {
         firstName: '',
         lastName: '',
-        company: '',
+        teamName: '',
         phone: '',
+        email: '',
         password: '',
-        confirm: '',
-        email: ''
+        confirm: ''
       },
       fields: [
         {
@@ -63,9 +63,9 @@ class ClientForm extends React.Component {
           required: true,
         },
         {
-          name: 'company',
+          name: 'teamName',
           type: 'text',
-          label: "Company Name (Team Drive's name)",
+          label: "Team's name",
           required: true,
         },
         {
@@ -98,7 +98,7 @@ class ClientForm extends React.Component {
     this.formatField = {
       firstName: 'firstName',
       lastName: 'lastName',
-      company: 'company',
+      teamName: 'teamName',
       phone: 'phone',
       email: 'email'
     }
@@ -121,7 +121,7 @@ class ClientForm extends React.Component {
   _onChange(e) {
 
     const name = e.target.name
-    
+
     const value = e.target.value
 
     this.setState({
@@ -129,7 +129,7 @@ class ClientForm extends React.Component {
       model: {
         ...this.state.model,
         [name]: value,
-        [this.formatField[name] ? this.formatField[name] : 'stuff']: value
+        // [this.formatField[name] ? this.formatField[name] : 'stuff']: value
       },
     }, () => {
       this.validate(name)
@@ -138,10 +138,14 @@ class ClientForm extends React.Component {
   }
 
   formatFormClient = (model = {}) => {
-    return Object.entries(model).map(([name, value]) => ({
-      name,
-      value
-    }))
+    const client = { ...model }
+    delete client.confirm
+    return client;
+
+    // return Object.entries(model).map(([name, value]) => ({
+    //   name,
+    //   value
+    // }))
   }
 
   _onSubmit(e) {
@@ -167,25 +171,15 @@ class ClientForm extends React.Component {
             this.props.createClient(
               this.formatFormClient(model)
             ).then(_ => {
-              history.push('/clients')
+              history.goBack()
             }).catch(error => {
-              this.setState({ errorMessage: error.error, error: error.errorsValidate, submitted: false })
+              this.setState({
+                errorMessage: error.error,
+                error: error.errorsValidate,
+                submitted: false
+              })
             })
-
-            // this.props.createUser(model).then(() => {
-
-            //   if (_.includes(userRolesValues, 'root') || _.includes(userRolesValues, 'administrator') || _.includes(userRolesValues, 'staff')) {
-            //     history.push('/clients')
-            //   } else {
-            //     history.push('/')
-            //   }
-
-            // }).catch(err => {
-
-            //   this.setState({
-            //     submitted: false,
-            //   })
-            // })
+            
           } else {
             let dataUpdate = {};
 
@@ -201,18 +195,6 @@ class ClientForm extends React.Component {
             }).catch(error => {
               this.setState({ errorMessage: error.error, error: error.errorsValidate, submitted: false })
             })
-            // this.props.updateUser(model).then(() => {
-            //   if (_.includes(userRolesValues, 'root') || _.includes(userRolesValues, 'administrator') || _.includes(userRolesValues, 'staff')) {
-            //     history.push('/clients')
-            //   } else {
-            //     history.push('/')
-            //   }
-            // }).catch(e => {
-
-            //   this.setState({
-            //     submitted: false,
-            //   })
-            // })
           }
 
         })
@@ -259,7 +241,8 @@ class ClientForm extends React.Component {
     _.each(fieldItems, (settings) => {
 
       const isRequired = _.get(settings, 'required', false)
-      const emailField = _.get(settings, 'email', false)
+      const emailField = _.get(settings, 'type', '') === 'email'
+      const confirmField = _.get(settings, 'name', '') === 'confirm'
 
       const name = _.get(settings, 'name')
       const label = _.get(settings, 'label', name)
@@ -277,12 +260,25 @@ class ClientForm extends React.Component {
         error = _.setWith(error, name, true)
         errors.push(errorMessage)
       }
+
+      if (confirmField && !this.isPasswordMatch()) {
+        errorMessage = `${label} does not match`
+        error = _.setWith(error, name, true)
+        errors.push(errorMessage)
+      }
     })
+
     this.setState({
       error: error,
     }, () => {
       return cb(errors)
     })
+  }
+
+  isPasswordMatch = () => {
+    const { confirm, password } = this.state.model
+
+    return confirm === password
   }
 
   getFieldsUpdate = (editMode) => field => {

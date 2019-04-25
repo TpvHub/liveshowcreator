@@ -158,11 +158,16 @@ export const getClient = (id) => {
 
 export const createClient = (body) => {
   return (dispatch, getState, { service }) => {
-    return service.post("/clients/signup", body).then(res => {
-      if (res.data.success) return Promise.resolve(true);
-      return Promise.reject("Can not create new client!");
-    }).catch(er => {
-      return Promise.reject(er.response.data)
+    return new Promise((resolve, reject) => {
+      service.mutation('create_client', { ...body }, getModelFields('newClient')).then(() => {
+        return resolve(body)
+      }).catch(e => {
+        dispatch({
+          type: ERROR,
+          payload: e,
+        })
+        return reject(e)
+      })
     })
   }
 }

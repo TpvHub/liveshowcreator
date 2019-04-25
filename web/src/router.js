@@ -1,4 +1,6 @@
 import AddUser from './components/users/add-user'
+import AddClient from './components/clients/add-client'
+import Register from './components/register'
 import Documents from './components/documents'
 import Login from './components/login'
 import ForgotPassword from './components/forgot-password'
@@ -15,27 +17,35 @@ export const routes = [
     component: Authenticate(Documents),
   },
   {
-    path: '/document/:id/edit',
-    component: Authenticate(EditDocument)
-  },
-  {
     path: '/login',
     component: Login,
+  },
+  {
+    path: '/register',
+    component: Register
   },
   {
     path: '/forgot-password',
     component: ForgotPassword,
   },
-  {
-    path: '/users',
-    component: Authenticate(Users)
-  },
+
+  // Client routes
   {
     path: '/clients',
     component: Authenticate(Clients)
   },
   {
+    path: '/clients/create',
+    component: AddClient
+  },
+  {
     path: '/clients/:clientId/users',
+    component: Authenticate(Users)
+  },
+
+  // User routes
+  {
+    path: '/users',
     component: Authenticate(Users)
   },
   {
@@ -45,6 +55,16 @@ export const routes = [
   {
     path: '/users/:id/edit',
     component: Authenticate(EditUser)
+  },
+
+  // Document routes
+  {
+    path: '/documents',
+    component: Authenticate(Documents),
+  },
+  {
+    path: '/document/:id/edit',
+    component: Authenticate(EditDocument)
   },
   {
     path: '/backups',
