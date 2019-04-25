@@ -30,7 +30,7 @@ const TitleContainer = styled.div `
  ${props => !props.search ? 'flex-grow: 1;' : null}
   padding-right: 50px;
   @media(max-width: 768px){
-    display: none;
+    // display: none;
   }
 
 `
