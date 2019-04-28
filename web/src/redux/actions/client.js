@@ -86,17 +86,16 @@ export const getClients = (filter) => {
  * @param teamdriveId
  * @returns {function(*=, *, {service: *}): Promise<any>}
  */
-export const deleteClient = (id, teamdriveId) => {
+export const deleteClient = (id) => {
   return (dispatch, getState, { service }) => {
 
     return new Promise((resolve, reject) => {
 
-      service.mutation('delete_client', { id: id }, null).then(() => {
+      service.mutation('delete_client', { _id: id }, null).then(() => {
         dispatch({
           type: DELETE_CLIENT_MODEL,
           payload: id,
         })
-        dispatch(deleteClientRichInfo(teamdriveId))
 
         return resolve(id)
 

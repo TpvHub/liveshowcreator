@@ -331,23 +331,36 @@ export default class Model {
 
   async beforeDelete(id) {
     // remove folder here
-    if (this.name === 'document') {
-      this.get(id).then((res) => {
-        const driveId = _.get(res, 'driveId', false)
-        if (driveId) {
-          googleApi.deleteDocumentFolderById(driveId)
-          // TODO: empty trash when no more space
-        }
-      })
-    }
-    return new Promise((resolve, reject) => {
-      return resolve(id)
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (this.name === 'document') {
+          await this.get(id).then((res) => {
+            const driveId = _.get(res, 'driveId', false)
+            if (driveId) {
+              return googleApi.deleteDocumentFolderById(driveId)
+              // TODO: empty trash when no more space
+            }
+          })
+          resolve(id)
+        } else resolve(id)
+      } catch(err) {
+        reject(err)
+      }
     })
+    
   }
 
   async afterDelete(id) {
     return new Promise((resolve, reject) => {
       return resolve(id)
+    })
+  }
+
+  deleteMany(options = {}) {
+    return new Promise((resolve, reject) => {
+      this.getCollection().deleteMany(options, (err, result) => {
+        return err ? reject(err) : resolve(options)
+      })
     })
   }
 

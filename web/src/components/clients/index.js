@@ -23,8 +23,8 @@ import {
   // getClientRichInfoList
 } from '../../redux/selectors'
 import {
-  // deleteClient,
   getClients,
+  deleteClient,
   // getListUsersOnline,
   // getClientRichInfo,
   // deleteClientRichInfo
@@ -237,16 +237,12 @@ class Clients extends React.Component {
               })}
             </TableBody>
           </Table>
-          {/* <ConfirmDeleteDialog onClose={(action) => {
+          <ConfirmDeleteDialog onClose={(action) => {
             switch (action) {
               case 'delete':
                 this.props.deleteClient(
                   _.get(this.state, 'deleteModel._id'),
-                  _.get(this.state, 'deleteModel.teamdriveId')
-
                 )
-                // this.props.deleteClientRichInfo()
-
                 break
 
               case 'cancel':
@@ -262,7 +258,7 @@ class Clients extends React.Component {
               deleteModel: null,
             })
 
-          }} open={!!this.state.deleteModel} /> */}
+          }} open={!!this.state.deleteModel} />
           <CreateUserButton>
             <Tooltip id="tooltip-left-end" title="Create client account"
               placement="left-end">
@@ -286,7 +282,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   getClients,
-  // deleteClient,
+  deleteClient,
   // getListUsersOnline,
   // getClientRichInfo,
   // deleteClientRichInfo

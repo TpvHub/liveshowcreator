@@ -212,7 +212,6 @@ class GoogleApi {
    * @returns {Promise<any>}
    */
   async deleteDocumentFolderById(driveId) {
-
     return new Promise((resolve, reject) => {
 
       drive.files.update({

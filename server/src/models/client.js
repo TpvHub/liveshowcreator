@@ -214,13 +214,11 @@ export default class Client extends Model {
                                     roles: ['client']
                                 }, args)
                                 _.unset(userArgs, ['teamName'])
-                                let user = await this.database.models().user.validate(null, userArgs)
                                 let client = await this.validate(null, {
                                     teamName: args.teamName,
                                 })
-
                                 // create new user
-                                user = await this.database.models().user.save(null, user)
+                                let user = await this.database.models().user.save(null, userArgs)
 
                                 // create new client
                                 client.userId = user._id
@@ -300,6 +298,58 @@ export default class Client extends Model {
                     })
                 }
             },
+            delete_client: {
+                type: this.schema('mutation'),
+                args: {
+                    _id: {
+                        type: GraphQLID,
+                    }
+                },
+                resolve: (value, args, request) => {
+                    
+                    /**
+                     * 1. Delete all users of the client
+                     * 2. Delete folder on drive
+                     * 3. Delete all documents of client
+                     * 4. Delete client
+                     * 
+                     */
+
+                    return new Promise(async (resolve, reject) => {
+                        try {
+                            const client = await this.get(args._id)
+                            const driveFolderId = client.driveFolderId
+                            const teamMembers = client.teamMembers || []
+
+
+                            // Delete all users of the client
+                            await Promise.all(teamMembers.map(
+                                userId => this.database.models().user.delete(userId))
+                            )
+                            console.log("Delete all users of the client")
+
+                            // Delete documents
+                            await this.database.models().document.deleteMany({
+                                userId: this.objectId(client.userId)
+                            })
+                            console.log("Delete documents")
+                            
+                            // Delete folder on drive
+                            driveFolderId && await googleApi.deleteDocumentFolderById(driveFolderId)
+                            console.log("Delete folder on drive")
+
+                            // Delete client
+                            await this.delete(client._id)
+                            console.log("Delete client")
+
+                            resolve(args)
+
+                        } catch(err) {
+                            reject(err)
+                        }
+                    })
+                }
+            }
         }
 
         return Object.assign(parentMutation, mutation)

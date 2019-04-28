@@ -277,7 +277,7 @@ export default class Service {
 
     if (!fields) {
       query = `
-                mutation { ${name}${args} }
+                mutation { ${name}${args}{ _id } }
             `
     }
     return new Promise((resolve, reject) => {
