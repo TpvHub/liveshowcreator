@@ -1,5 +1,6 @@
 import AddUser from './components/users/add-user'
 import AddClient from './components/clients/add-client'
+import EditClient from './components/clients/edit-client'
 import Register from './components/register'
 import Documents from './components/documents'
 import Login from './components/login'
@@ -37,6 +38,10 @@ export const routes = [
   {
     path: '/clients/create',
     component: AddClient
+  },
+  {
+    path: '/clients/:clientId/edit',
+    component: Authenticate(EditClient)
   },
   {
     path: '/clients/:clientId/users',

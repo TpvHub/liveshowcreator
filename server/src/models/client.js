@@ -20,35 +20,109 @@ export default class Client extends Model {
         super('client', 'client', ctx)
     }
 
+    getClientById(_id, originalClient = null) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let client = !originalClient ? await this.get(_id) : originalClient
+
+                const relations = this.relations()
+                const relationsData = await Promise.all(Object.keys(relations).map(key => new Promise(async (rs, rj) => {
+                    const relation = relations[key]
+                    const value = await relation.model.findOne({
+                        [relation.foreignField]: client[relation.localField]
+                    })
+                    rs({
+                        key,
+                        value
+                    })
+                })))
+
+                relationsData.map(({ key, value }) => {
+                    client[key] = value
+                })
+
+                const numOfShows = client.user ? await this.database.models().document.count({
+                    userId: this.objectId(client.user._id)
+                }) : 0
+
+                resolve({
+                    _id: client._id,
+                    firstName: _.get(client.user, 'firstName', null),
+                    lastName: _.get(client.user, 'lastName', null),
+                    teamName: client.teamName,
+                    email: _.get(client.user, 'email', null),
+                    avatar: _.get(client.user, 'avatar', null),
+                    phone: _.get(client.user, 'phone', null),
+                    password: '',
+                    status: _.get(client.user, 'status', null),
+                    // Rich information
+                    numOfUsers: client.teamMembers.length,
+                    numOfUsersOnline: 0,
+                    numOfShows,
+                    driveUsed: 0,
+                    // timestamp
+                    created: client.created,
+                    updated: client.updated,
+                })
+
+            } catch (err) {
+                reject(err)
+            }
+
+        })
+    }
+
     query() {
         const parentQuery = super.query()
-        
+
+        const clientFields = Object.assign({
+            firstName: {
+                type: GraphQLString,
+            },
+            lastName: {
+                type: GraphQLString,
+            },
+            email: {
+                type: Email,
+            },
+            avatar: {
+                type: GraphQLString,
+            },
+            phone: {
+                type: GraphQLString,
+            },
+            password: {
+                type: GraphQLString
+            },
+            numOfUsers: {
+                type: GraphQLInt,
+                default: 0,
+            },
+            numOfUsersOnline: {
+                type: GraphQLInt,
+                default: 0,
+            },
+            numOfShows: {
+                type: GraphQLInt,
+                default: 0,
+            },
+            driveUsed: {
+                type: GraphQLFloat,
+                default: 0.00,
+            },
+            status: {
+                type: GraphQLString,
+            },
+        }, this.fields())
+
         const getClientsSchema = new GraphQLObjectType({
             name: 'getClients',
-            fields: () => (Object.assign({
-                email: {
-                    type: Email,
-                },
-                numOfUsers: {
-                    type: GraphQLInt,
-                    default: 0,
-                },
-                numOfUsersOnline: {
-                    type: GraphQLInt,
-                    default: 0,
-                },
-                numOfShows: {
-                    type: GraphQLInt,
-                    default: 0,
-                },
-                driveUsed: {
-                    type: GraphQLFloat,
-                    default: 0.00,
-                },
-                status: {
-                    type: GraphQLString,
-                },
-            }, this.fields())),
+            fields: () => clientFields,
+        })
+
+        const getClientByIdSchema = new GraphQLObjectType({
+            name: 'getClientById',
+            fields: () => clientFields,
         })
 
         const query = {
@@ -61,53 +135,40 @@ export default class Client extends Model {
                             let filter = {
                                 limit: _.get(args, 'limit', 50),
                                 skip: _.get(args, 'skip', 0),
-                                sort: {
-                                    teamName: 1,
-                                },
+                                // sort: {
+                                //     teamName: 1,
+                                // },
                             }
 
                             let clients = await this.find(null, filter)
-                            const relations = this.relations()
 
-                            clients = await Promise.all(clients.map(client => new Promise(async (rs, rj) => {
-                                const relationsData = await Promise.all(Object.keys(relations).map(key => new Promise(async (rs, rj) => {
-                                    const relation = relations[key]
-                                    const value = await relation.model.findOne({
-                                        [relation.foreignField]: client[relation.localField]
-                                    })
-                                    rs({
-                                        key,
-                                        value
-                                    })
-                                })))
-
-                                relationsData.map(({ key, value }) => {
-                                    client[key] = value
-                                })
-
-                                const numOfShows = client.user ? await this.database.models().document.count({
-                                    userId: this.objectId(client.user._id)
-                                }) : 0
-
-                                client.email = client.user ? client.user.email : null
-                                client.status = client.user ? client.user.status : null
-
-                                Object.assign(client, {
-                                    numOfUsers: client.teamMembers.length || 0,
-                                    numOfUsersOnline: 0,
-                                    numOfShows,
-                                    driveUsed: 0.00
-                                })
-
-                                rs(client)
-                            })))
-
+                            clients = await Promise.all(clients.map(client => this.getClientById(client._id, client)))
                             resolve(clients || [])
 
                         } catch (err) {
                             reject(err)
                         }
                     })
+                }
+            },
+            getClientById: {
+                type: getClientsSchema,
+                args: {
+                    _id: {
+                        type: GraphQLID
+                    }
+                },
+                resolve: (value, args, request) => {
+                    return new Promise(async (resolve, reject) => {
+                        try {
+                            const client = await this.getClientById(args._id)
+                            resolve(client)
+
+                        } catch (err) {
+                            reject(err)
+                        }
+                    })
+
                 }
             }
         }
@@ -117,31 +178,32 @@ export default class Client extends Model {
 
     mutation() {
         const parentMutation = super.mutation()
+        const clientArgs = {
+            teamName: {
+                type: GraphQLString,
+            },
+            email: {
+                type: Email,
+            },
+            password: {
+                type: GraphQLString,
+            },
+            firstName: {
+                type: GraphQLString,
+            },
+            lastName: {
+                type: GraphQLString,
+            },
+            phone: {
+                type: GraphQLString,
+                default: null,
+            },
+        }
 
         const mutation = {
             create_client: {
                 type: this.schema('mutation'),
-                args: {
-                    teamName: {
-                        type: GraphQLString,
-                    },
-                    email: {
-                        type: Email,
-                    },
-                    password: {
-                        type: GraphQLString,
-                    },
-                    firstName: {
-                        type: GraphQLString,
-                    },
-                    lastName: {
-                        type: GraphQLString,
-                    },
-                    phone: {
-                        type: GraphQLString,
-                        default: null,
-                    },
-                },
+                args: clientArgs,
                 resolve: (value, args, request) => {
                     return new Promise(async (resolve, reject) => {
                         try {
@@ -184,7 +246,60 @@ export default class Client extends Model {
                         }
                     })
                 }
-            }
+            },
+            update_client: {
+                type: this.schema('mutation'),
+                args: Object.assign(clientArgs, {
+                    _id: {
+                        type: GraphQLID,
+                    },
+                }),
+                resolve: (value, args, request) => {
+                    /**
+                     * Update client:
+                     * 1. Update client fields
+                     * 2. Update client user fields
+                     * 3. Update drive folder name
+                     */
+
+                    return new Promise(async (resolve, reject) => {
+                        try {
+                            let hasPerm = false
+                            hasPerm = await this.checkPermission(request, 'updateById', null)
+                            if (hasPerm) {
+                                const clientId = args._id;
+
+                                const originalClient = await this.get(clientId)
+                                const originalUser = await this.database.models().user.get(originalClient.userId)
+
+                                const userArgs = Object.assign({}, args)
+                                const clientArgs = {
+                                    teamName: args.teamName,
+                                }
+
+                                _.unset(userArgs, ['teamName'])
+
+                                // update user
+                                let user = await this.database.models().user.save(originalUser._id, userArgs)
+                                // update client
+                                let client = await this.save(clientId, clientArgs)
+
+                                // update drive folder name
+                                client.teamName !== originalClient.teamName && await googleApi.createClientFolder(client.teamName, {
+                                    clientId: client._id
+                                })
+
+                                resolve(client)
+                            } else {
+                                reject('Access denied')
+                            }
+                        } catch (err) {
+                            console.log('mutation.update_client ERROR: ', err.message, err)
+                            reject(err.message || err)
+                        }
+                    })
+                }
+            },
         }
 
         return Object.assign(parentMutation, mutation)

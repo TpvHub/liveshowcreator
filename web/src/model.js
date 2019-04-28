@@ -1,12 +1,21 @@
 const clientField = {
   _id: {},
+  firstName: {},
+  lastName: {},
   teamName: {},
   email: {},
+  avatar: {},
+  phone: {},
+  password: {},
+  status: {},
+  // Rich information
   numOfUsers: {},
   numOfUsersOnline: {},
   numOfShows: {},
   driveUsed: {},
-  status: {},
+  // timestamp
+  created: {},
+  updated: {},
 }
 
 const clientRegisterFields = {

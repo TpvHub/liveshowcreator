@@ -21,13 +21,12 @@ const Container = styled.div `
 `
 
 class EditUser extends React.Component {
+  constructor (props) {
+    super(props)
+  }
 
-  // constructor (props) {
-  //   super(props)
-  // }
-
-  componentWillMount () {
-    const id = _.get(this.props, 'match.params.id')
+  componentDidMount () {
+    const id = _.get(this.props, 'match.params.clientId')
     if (id) {
       this.props.getClient(id)
     }

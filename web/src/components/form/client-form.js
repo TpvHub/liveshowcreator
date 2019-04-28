@@ -100,22 +100,32 @@ class ClientForm extends React.Component {
       lastName: 'lastName',
       teamName: 'teamName',
       phone: 'phone',
-      email: 'email'
+      email: 'email',
     }
   }
 
   componentDidMount() {
-
-    const { editMode } = this.props
-
-    if (editMode) {
-      let model = this.props.model
-      model.password = ''
-      this.setState({
-        model: model,
-      })
-
+    if (this.props.editMode) {
+      this.setStateModel(this.props)
     }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.editMode && prevProps.model._id !== this.props.model._id) {
+      this.setStateModel(this.props)
+    }
+  }
+
+  setStateModel = (props) => {
+    let model = props.model
+    model.password = ''
+    this.setState({
+      model: {
+        ...this.formatFormClient(model),
+        password: '',
+        confirm: ''
+      },
+    })
   }
 
   _onChange(e) {
@@ -138,14 +148,14 @@ class ClientForm extends React.Component {
   }
 
   formatFormClient = (model = {}) => {
-    const client = { ...model }
+    const client = this.state.fields.reduce((acc, cur) => {
+        return {
+          ...acc,
+          [cur.name]: model[cur.name]
+        }
+    }, this.state.model)
     delete client.confirm
     return client;
-
-    // return Object.entries(model).map(([name, value]) => ({
-    //   name,
-    //   value
-    // }))
   }
 
   _onSubmit(e) {
@@ -179,18 +189,14 @@ class ClientForm extends React.Component {
                 submitted: false
               })
             })
-            
+
           } else {
-            let dataUpdate = {};
-
-            Object.values(this.formatField).forEach(key => {
-              dataUpdate[key] = model[key];
-            })
-
-            this.props.updateClient({
-              ...dataUpdate,
-              _id: model._id,
-            }).then(() => {
+            this.props.updateClient(
+              {
+                ...this.formatFormClient(model),
+                _id: this.props.model._id
+              }
+            ).then(() => {
               history.push('/clients')
             }).catch(error => {
               this.setState({ errorMessage: error.error, error: error.errorsValidate, submitted: false })
@@ -224,6 +230,7 @@ class ClientForm extends React.Component {
   validate(fieldNames = [], cb = () => {
   }) {
     let { model, error } = this.state
+    const { editMode } = this.props
 
     let errors = []
 
@@ -261,7 +268,7 @@ class ClientForm extends React.Component {
         errors.push(errorMessage)
       }
 
-      if (confirmField && !this.isPasswordMatch()) {
+      if (confirmField && value && !this.isPasswordMatch()) {
         errorMessage = `${label} does not match`
         error = _.setWith(error, name, true)
         errors.push(errorMessage)
@@ -282,10 +289,10 @@ class ClientForm extends React.Component {
   }
 
   getFieldsUpdate = (editMode) => field => {
-    if (editMode) {
-      if (this.formatField[field.name]) return true;
-      return false;
-    }
+    // if (editMode) {
+    //   if (this.formatField[field.name]) return true;
+    //   return false;
+    // }
     return true;
   }
 

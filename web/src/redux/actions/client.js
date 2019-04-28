@@ -123,14 +123,7 @@ export const getClient = (id) => {
   return (dispatch, getState, { service }) => {
 
     return new Promise((resolve, reject) => {
-
-      const client = getState().client.models.get(id)
-
-      if (client) {
-        return resolve(client)
-      }
-
-      service.query('client', { id: id }, getModelFields('client')).then((model) => {
+      service.query('getClientById', { _id: id }, getModelFields('client')).then((model) => {
 
         dispatch({
           type: SET_CLIENT_MODEL,
@@ -138,6 +131,7 @@ export const getClient = (id) => {
             models: [model],
           },
         })
+
         return resolve(model)
 
       }).catch(e => {
@@ -191,7 +185,7 @@ export const updateClient = (model, roles = null) => {
         {
           name: 'update_client',
           data: model,
-          fields: getModelFields('client'),
+          fields: getModelFields('newClient'),
         },
 
       ]
@@ -220,10 +214,11 @@ export const updateClient = (model, roles = null) => {
 
         return resolve(data)
       }).catch(err => {
-        // dispatch({
-        //   type: ERROR,
-        //   payload: err,
-        // })
+        dispatch({
+          type: ERROR,
+          payload: err,
+        })
+
         if (err.response) {
           return reject({
             error: err.response.data.errors[0].message,
@@ -232,8 +227,7 @@ export const updateClient = (model, roles = null) => {
             }
           })
         } else {
-          return reject(err[0] ? JSON.parse(err[0].message) : {
-          });
+          return reject(err[0] ? err[0] : {});
         }
       })
     })

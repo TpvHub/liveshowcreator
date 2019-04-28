@@ -29,7 +29,7 @@ export const getVisibleClients = createSelector(
 )
 
 const getClient = (state, props) => {
-  const id = _.get(props, 'match.params.id')
+  const id = _.get(props, 'match.params.clientId')
   return state.client.models.get(id)
 }
 

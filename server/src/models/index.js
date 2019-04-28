@@ -520,7 +520,6 @@ export default class Model {
         }
 
         this.findOne(query, null).then((result) => {
-
           if (result !== null) {
 
             let validateError = null
