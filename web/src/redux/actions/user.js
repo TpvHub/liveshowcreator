@@ -191,23 +191,23 @@ export const getUsers = (filter) => {
     const skip = _.get(filter, 'skip', 50)
 
     service.query('users', { limit: limit, skip: skip },
-        getModelFields('user')).then((models) => {
+      getModelFields('user')).then((models) => {
 
-          dispatch({
-            type: SET_USER_MODEL,
-            payload: {
-              models: models,
-              filter: filter,
-            },
-          })
-
-        }).catch(err => {
-
-          return dispatch({
-            type: ERROR,
-            payload: err,
-          })
+        dispatch({
+          type: SET_USER_MODEL,
+          payload: {
+            models: models,
+            filter: filter,
+          },
         })
+
+      }).catch(err => {
+
+        return dispatch({
+          type: ERROR,
+          payload: err,
+        })
+      })
 
   }
 }
@@ -357,45 +357,26 @@ export const updateUser = (model, roles = null) => {
     const userId = _.get(model, '_id')
     return new Promise((resolve, reject) => {
 
-      let q = [
-        {
-          name: 'update_user',
-          data: model,
-          fields: getModelFields('user'),
-        },
-
-      ]
-
-      if (roles !== null) {
-
-        q.push({
-          name: 'updateUserRoles',
-          data: { id: userId, roles: roles },
-          fields: null,
-        })
+      let q = {
+        name: 'update_user',
+        data: model,
+        fields: getModelFields('user'),
       }
 
-      service.mutationMany(q).then((data) => {
-
+      service.mutation('update_user', model, getModelFields('user')).then((data) => {
         dispatch({
           type: SET_USER_MODEL,
           payload: {
             models: [_.get(data, 'update_user')],
           },
         })
-
-        if (_.get(currentUser, '_id') === userId) {
-          dispatch(setCurrentUser(model))
-        }
-
-        return resolve(data)
-      }).catch(e => {
-
+        resolve(data)
+      }).catch(err => {
         dispatch({
           type: ERROR,
-          payload: e,
+          payload: err,
         })
-        return reject(e)
+        return reject(err)
       })
     })
   }

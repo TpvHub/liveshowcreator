@@ -103,10 +103,10 @@ export default class User extends Model {
           }).then(async (token) => {
             _.unset(model, 'password')
             token = _.setWith(token, 'user', model)
-            token = _.setWith(token, 'client', 
+            token = _.setWith(token, 'client',
               model.roles[0] === 'client' ?
-              await this.database.models().client.findOne({ userId: model._id })  
-              : null
+                await this.database.models().client.findOne({ userId: model._id })
+                : null
             )
 
             return resolve(token)
@@ -432,7 +432,7 @@ export default class User extends Model {
                       if (
                         _.includes(newUser.roles, 'administrator') ||
                         _.includes(newUser.roles, 'staff') ||
-                        _.includes(newUser.roles, 'client') || 
+                        _.includes(newUser.roles, 'client') ||
                         client._id.toString() !== args.clientId
                       ) return rj('Access denied')
                     }
@@ -483,7 +483,26 @@ export default class User extends Model {
         args: this.fields(),
         resolve: async (value, args, request) => {
 
-          const id = _.get(args, '_id')
+          return new Promise(async (resolve, reject) => {
+            try {
+              const id = _.get(args, '_id')
+              let hasPerm = await this.checkPermission(request, 'updateById', id) || false
+
+              if (!hasPerm) {
+                return reject('Access denied')
+              }
+
+              let model = await this.save(id, args)
+
+              resolve(model)
+
+            } catch (err) {
+              reject(err)
+            }
+
+          })
+
+
 
           let hasPerm = false
           try {

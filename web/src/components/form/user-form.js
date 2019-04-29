@@ -172,20 +172,14 @@ class UserForm extends React.Component {
               })
             })
           } else {
-            console.log(model)
-
-            // this.props.updateUser(model).then(() => {
-            //   if (_.includes(userRolesValues, 'administrator') || _.includes(userRolesValues, 'staff')) {
-            //     history.goBack()
-            //   } else {
-            //     history.push('/')
-            //   }
-            // }).catch(e => {
-
-            //   this.setState({
-            //     submitted: false,
-            //   })
-            // })
+            this.props.updateUser(model).then(() => {
+              history.goBack()
+            }).catch(e => {
+              console.log(e)
+              this.setState({
+                submitted: false,
+              })
+            })
           }
 
         })
