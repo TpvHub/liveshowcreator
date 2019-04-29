@@ -28,7 +28,7 @@ class AddUser extends React.Component {
           <Card>
             <CardContent>
               <h2>Create user</h2>
-              <UserForm/>
+              <UserForm />
             </CardContent>
           </Card>
 

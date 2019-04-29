@@ -50,6 +50,7 @@ export default class Client extends Model {
                     firstName: _.get(client.user, 'firstName', null),
                     lastName: _.get(client.user, 'lastName', null),
                     teamName: client.teamName,
+                    teamMembers: client.teamMembers,
                     email: _.get(client.user, 'email', null),
                     avatar: _.get(client.user, 'avatar', null),
                     phone: _.get(client.user, 'phone', null),

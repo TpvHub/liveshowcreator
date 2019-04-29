@@ -125,6 +125,16 @@ class Users extends React.Component {
     })
   }
 
+  filterUsers = (user) => {
+    const { currentUser } = this.props
+
+    if (_.includes(currentUser.roles, 'administrator') || _.includes(currentUser.roles, 'staff')) {
+      return _.includes(user.roles, 'staff') || _.includes(user.roles, 'administrator')
+    } else {
+      return _.includes(user.roles, 'user')
+    }
+  }
+
   render() {
 
     const { users } = this.state
@@ -149,7 +159,7 @@ class Users extends React.Component {
               </TableRow>
             </TableHead>
             <TableBody>
-              {users.map((n, index) => {
+              {users.filter(this.filterUsers).map((n, index) => {
                 const userAvatar = _.get(n, 'avatar', null)
                 let roles = _.get(n, 'roles', [])
                 if (!roles) {
@@ -244,6 +254,7 @@ class Users extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
+  currentUser: state.app.currentUser,
   users: getVisibleUsers(state),
 })
 

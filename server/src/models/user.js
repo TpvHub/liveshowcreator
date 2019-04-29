@@ -393,6 +393,7 @@ export default class User extends Model {
               hasPerm = await this.checkPermission(request, 'create', null)
               if (hasPerm) {
                 let newUser = await this.validate(null, args)
+
                 // client request roles
                 let userRoles = await this.getUserRoles(_.get(request, 'token.userId'))
 
@@ -457,6 +458,7 @@ export default class User extends Model {
               } else reject('Access denied')
 
             } catch (err) {
+              console.log('create_user.ERROR', err, err.message)
               reject(err)
             }
           })

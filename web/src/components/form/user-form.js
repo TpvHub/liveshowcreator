@@ -6,10 +6,24 @@ import { isEmail } from '../../helper/validation'
 import { history } from '../../hostory'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-import { createUser, updateUser } from '../../redux/actions'
-import UserRoleSelect from './user-role-select'
 
-const Container = styled.div `
+import {
+  createUser,
+  updateUser,
+  getClients
+} from '../../redux/actions'
+
+import {
+  getVisibleClients,
+} from '../../redux/selectors'
+
+import UserRoleSelect from './user-role-select'
+import CustomSelect from './select'
+
+
+
+
+const Container = styled.div`
 
   .form-actions {
     button {
@@ -23,7 +37,7 @@ const Container = styled.div `
 
 class UserForm extends React.Component {
 
-  constructor (props) {
+  constructor(props) {
     super(props)
 
     this._onChange = this._onChange.bind(this)
@@ -38,10 +52,12 @@ class UserForm extends React.Component {
       model: {
         firstName: '',
         lastName: '',
-        password: '',
+        phone: '',
+        status: 'pending',
         email: '',
+        password: '',
         avatar: null,
-        roles: [],
+        roles: ['staff'],
       },
       fields: [
         {
@@ -54,6 +70,12 @@ class UserForm extends React.Component {
           name: 'lastName',
           type: 'text',
           label: 'Last name',
+          required: true,
+        },
+        {
+          name: 'phone',
+          type: 'text',
+          label: 'Phone',
           required: true,
         },
         {
@@ -71,15 +93,17 @@ class UserForm extends React.Component {
 
       ],
       roleList: [],
+      statusList: ['pending', 'blocked', 'actived'],
       userRoles: [],
+      userTeamName: null,
       needUpdateRole: false,
     }
 
   }
 
-  componentDidMount () {
+  componentDidMount() {
 
-    const {editMode} = this.props
+    const { editMode } = this.props
 
     if (editMode) {
       let model = this.props.model
@@ -98,7 +122,11 @@ class UserForm extends React.Component {
 
   }
 
-  _onChange (e) {
+  componentWillReceiveProps(nextProps) {
+    this.setUserTeamName(nextProps)
+  }
+
+  _onChange(e) {
 
     const name = e.target.name
     const value = e.target.value
@@ -115,9 +143,9 @@ class UserForm extends React.Component {
 
   }
 
-  _onSubmit (e) {
-    const {editMode, currentUser} = this.props
-    const {model} = this.state
+  _onSubmit(e) {
+    const { editMode, currentUser } = this.props
+    const { model } = this.state
 
     e.preventDefault()
 
@@ -133,33 +161,27 @@ class UserForm extends React.Component {
 
           if (!editMode) {
             this.props.createUser(model).then(() => {
-
-              if (_.includes(userRolesValues, 'administrator') || _.includes(userRolesValues, 'staff')) {
-                history.goBack()
-              } else {
-                history.push('/')
-              }
-
+              history.goBack()
             }).catch(err => {
-
               this.setState({
                 submitted: false,
               })
             })
           } else {
+            console.log(model)
 
-            this.props.updateUser(model).then(() => {
-              if (_.includes(userRolesValues, 'administrator') || _.includes(userRolesValues, 'staff')) {
-                history.goBack()
-              } else {
-                history.push('/')
-              }
-            }).catch(e => {
+            // this.props.updateUser(model).then(() => {
+            //   if (_.includes(userRolesValues, 'administrator') || _.includes(userRolesValues, 'staff')) {
+            //     history.goBack()
+            //   } else {
+            //     history.push('/')
+            //   }
+            // }).catch(e => {
 
-              this.setState({
-                submitted: false,
-              })
-            })
+            //   this.setState({
+            //     submitted: false,
+            //   })
+            // })
           }
 
         })
@@ -169,7 +191,7 @@ class UserForm extends React.Component {
 
   }
 
-  getFields (names = []) {
+  getFields(names = []) {
 
     let items = []
 
@@ -186,9 +208,9 @@ class UserForm extends React.Component {
     return items
   }
 
-  validate (fieldNames = [], cb = () => {
+  validate(fieldNames = [], cb = () => {
   }) {
-    let {model, error} = this.state
+    let { model, error } = this.state
 
     let errors = []
 
@@ -232,9 +254,35 @@ class UserForm extends React.Component {
     })
   }
 
-  render () {
-    const {editMode} = this.props
-    const {model, submitted, error} = this.state
+  filterRoleList = (role) => {
+    const { currentUser } = this.props
+    if (_.includes(currentUser.roles, 'administrator') || _.includes(currentUser.roles, 'staff')) {
+      return role === 'staff' || role === 'administrator'
+    } else {
+      return role === 'user'
+    }
+  }
+
+  mapClients = (name) => client => {
+    return client[name]
+  }
+
+  setUserTeamName = (props) => {
+    const { clients } = props
+    const { model } = this.state
+
+    const client = clients.toArray().find(client => {
+      return _.includes(client.teamMembers, model._id)
+    }) || {}
+
+    this.setState({
+      userTeamName: client.teamName || ''
+    })
+  }
+
+  render() {
+    const { editMode, clients } = this.props
+    const { model, submitted, error } = this.state
 
     let userRoles = _.get(model, 'roles', [])
     if (userRoles === null) {
@@ -247,7 +295,7 @@ class UserForm extends React.Component {
           const name = _.get(field, 'name')
           return (
             <TextField
-              key={'TextField'+index+name}
+              key={'TextField' + index + name}
               name={name}
               error={_.get(error, name, false)}
               id={name}
@@ -261,21 +309,51 @@ class UserForm extends React.Component {
           )
 
         })}
-        {
-          this.state.roleList.length ? (
-            <UserRoleSelect
-              onChange={(selected) => {
-                this.setState({
-                  needUpdateRole: true,
-                  model: {
-                    ...this.state.model,
-                    roles: selected,
-                  },
-                })
-              }} value={userRoles}
-              options={this.state.roleList}/>
-          ) : null
-        }
+
+        {/* {
+          _.includes(userRoles, 'user') &&
+          <React.Fragment>
+            <br />
+            <CustomSelect
+              name='clientId'
+              className='selector-clientId'
+              options={clients.toArray().map(this.mapClients('teamName'))}
+              label="Team's name"
+              required
+              onChange={(e) => { this.setState({ userTeamName: e }) }}
+              // defaultValue={clients.toArray()[0] ? clients.toArray()[0].teamName : ''}
+              value={this.state.userTeamName}
+            />
+          </React.Fragment>
+        } */}
+
+        <br />
+
+        <CustomSelect
+          name='roles'
+          className='selector-userRole'
+          options={this.state.roleList.filter(this.filterRoleList)}
+          label='Role'
+          required
+          onChange={(e) => { this._onChange({ target: { name: 'roles', value: [e] } }) }}
+          value={userRoles[0]}
+        />
+
+        <br />
+
+        <CustomSelect
+          name='status'
+          className='selector-userStatus'
+          options={this.state.statusList}
+          label='Status'
+          required
+          onChange={(e) => { this._onChange({ target: { name: 'status', value: e } }) }}
+          value={model.status}
+        />
+
+        <br />
+        <br />
+
         <div className={'form-actions'}>
           <Button
             disabled={submitted}
@@ -289,8 +367,8 @@ class UserForm extends React.Component {
           <Button onClick={() => {
             history.push('/users')
           }} disabled={submitted}
-                  type={'button'}
-                  size="medium">
+            type={'button'}
+            size="medium">
             Cancel
           </Button>
         </div>
@@ -300,14 +378,15 @@ class UserForm extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  currentUser: state.app.currentUser
+  currentUser: state.app.currentUser,
+  clients: getVisibleClients(state)
 })
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   createUser,
   updateUser,
   getRoles: () => {
-    return (dispatch, getState, {service}) => {
+    return (dispatch, getState, { service }) => {
 
       return new Promise((resolve, reject) => {
 
@@ -327,5 +406,6 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
       })
     }
   },
+  // getClients
 }, dispatch)
 export default connect(mapStateToProps, mapDispatchToProps)(UserForm)
