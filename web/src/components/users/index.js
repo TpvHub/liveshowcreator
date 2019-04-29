@@ -152,6 +152,7 @@ class Users extends React.Component {
   render() {
 
     const { users } = this.state
+    const { currentUser } = this.props
 
     const menuOptions = [
       { label: 'Edit', key: 'edit' },
@@ -234,7 +235,10 @@ class Users extends React.Component {
           <ConfirmDeleteDialog onClose={(action) => {
             switch (action) {
               case 'delete':
-                this.props.deleteUser(_.get(this.state, 'deleteModel._id'))
+                this.props.deleteUser(
+                  _.get(this.state, 'deleteModel._id'),
+                  this.clientId || _.get(currentUser, 'client._id', null)
+                )
 
                 break
 

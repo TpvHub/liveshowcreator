@@ -275,19 +275,18 @@ export const createUser = (user) => {
  * @param id
  * @returns {function(*=, *, {service: *}): Promise<any>}
  */
-export const deleteUser = (id) => {
+export const deleteUser = (id, clientId) => {
   return (dispatch, getState, { service }) => {
 
     return new Promise((resolve, reject) => {
 
-      service.mutation('delete_user', { id: id }, null).then(() => {
+      service.mutation('delete_user', { _id: id, clientId }, null).then(() => {
         dispatch({
           type: DELETE_USER_MODEL,
           payload: id,
         })
 
         return resolve(id)
-
       }).catch(e => {
 
         dispatch({

@@ -501,74 +501,56 @@ export default class User extends Model {
             }
 
           })
+        },
+      },
 
-
-
-          let hasPerm = false
-          try {
-
-            hasPerm = await this.checkPermission(request, 'updateById', id)
+      delete_user: {
+        type: this.schema('mutation'),
+        args: {
+          _id: {
+            type: GraphQLID,
+          },
+          clientId: {
+            type: GraphQLID,
           }
-          catch (err) {
-
-          }
+        },
+        resolve: (value, args, request) => {
+          /**
+           * 1. Delete all teamMembers of client
+           * 2. Delete user 
+           */
 
           return new Promise(async (resolve, reject) => {
-
-            if (!hasPerm) {
-              return reject('Access denied')
-            }
-
-            let model = null
-            let saveError = null
-
-            const originalModel = await this.get(id)
-            if (!originalModel) {
-              return reject('User not found.')
-            }
-
-            // we are not allow user update directly roles
-            const hasPermissionUpdateUserRoles = await this.checkPermission(
-              request, 'updateUserRole', id)
-
-            if (!hasPermissionUpdateUserRoles) {
-              args.roles = _.get(originalModel, 'roles', [])
-            }
             try {
-              model = await this.save(id, args)
+              let user = await this.get(args._id)
+              let userRoles = await this.getUserRoles(_.get(request, 'token.userId'))
 
-            } catch (e) {
-              saveError = e
-            }
-
-            if (saveError) {
-              return reject(saveError)
-            }
-
-            let relations = []
-            _.each(this.relations(), (v, k) => {
-              if (v.type === 'belongTo') {
-                relations.push({ name: k, relation: v })
+              let client = null
+              if (_.includes(user.roles, 'user')) {
+                client = await this.database.models().client.findOne({ _id: this.objectId(args.clientId) })
               }
-            })
-            for (let i in relations) {
-              const relation = relations[i]
-              const localField = _.get(relation, 'relation.localField')
-              const relationId = _.get(model, localField)
-              let relationModel = null
-              try {
-                relationModel = await relation.relation.model.get(relationId)
-              } catch (e) {
 
+
+              const deleteTeamMembers = (client, userId) => {
+                client.teamMembers = client.teamMembers.filter(mem => mem.toString() !== userId.toString())
+                return this.database.models().client.save(client._id, client)
               }
-              model[relation.name] = relationModel
+
+              await composePromise(
+                _ => this.delete(user._id),
+                _ => client ? deleteTeamMembers(client, user._id) : null
+              )()
+
+              resolve()
+            } catch (err) {
+              reject(err)
             }
-            return resolve(model)
 
           })
 
-        },
+        }
       },
+
       updateUserRoles: {
         type: GraphQLList(GraphQLString),
         args: {
@@ -602,6 +584,7 @@ export default class User extends Model {
           })
         },
       },
+
       logout: {
 
         type: GraphQLBoolean,
