@@ -57,7 +57,7 @@ class UserForm extends React.Component {
         email: '',
         password: '',
         avatar: null,
-        roles: ['staff'],
+        roles: [props.clientId ? 'user' : 'staff'],
       },
       fields: [
         {
@@ -114,6 +114,7 @@ class UserForm extends React.Component {
 
     }
     this.props.getRoles().then((data) => {
+      console.log(data)
       this.setState({
         roleList: _.get(data, 'roleList', []),
         userRoles: _.get(data, 'userRoles', []),
@@ -144,7 +145,7 @@ class UserForm extends React.Component {
   }
 
   _onSubmit(e) {
-    const { editMode, currentUser } = this.props
+    const { editMode, currentUser, clientId } = this.props
     const { model } = this.state
 
     e.preventDefault()
@@ -160,7 +161,10 @@ class UserForm extends React.Component {
           const userRolesValues = _.get(currentUser, 'roles', [])
 
           if (!editMode) {
-            this.props.createUser(model).then(() => {
+            const userCreateForm = model;
+            if (clientId) userCreateForm.clientId = clientId
+
+            this.props.createUser(userCreateForm).then(() => {
               history.goBack()
             }).catch(err => {
               this.setState({
@@ -255,12 +259,23 @@ class UserForm extends React.Component {
   }
 
   filterRoleList = (role) => {
-    const { currentUser } = this.props
-    if (_.includes(currentUser.roles, 'administrator') || _.includes(currentUser.roles, 'staff')) {
-      return role === 'staff' || role === 'administrator'
-    } else {
+    console.log(role)
+
+    const { editMode, clientId } = this.props
+    const { model } = this.state
+
+    if (editMode) {
+      // Edit user mode
+      if (
+        _.includes(model.roles, 'administrator') ||
+        _.includes(model.roles, 'staff')
+      ) return role === 'administrator' || role === 'staff'
+
       return role === 'user'
     }
+
+    // Create user mode
+    return clientId ? role === 'user' : role === 'staff' || role === 'administrator'
   }
 
   mapClients = (name) => client => {
@@ -327,17 +342,22 @@ class UserForm extends React.Component {
           </React.Fragment>
         } */}
 
-        <br />
-
-        <CustomSelect
-          name='roles'
-          className='selector-userRole'
-          options={this.state.roleList.filter(this.filterRoleList)}
-          label='Role'
-          required
-          onChange={(e) => { this._onChange({ target: { name: 'roles', value: [e] } }) }}
-          value={userRoles[0]}
-        />
+        {
+          this.state.roleList.length ? 
+          <React.Fragment>
+            <br />
+            <CustomSelect
+              name='roles'
+              className='selector-userRole'
+              options={this.state.roleList.filter(this.filterRoleList)}
+              label='Role'
+              required
+              onChange={(e) => { this._onChange({ target: { name: 'roles', value: [e] } }) }}
+              value={userRoles[0]}
+            />
+          </React.Fragment>
+          : null
+        }
 
         <br />
 

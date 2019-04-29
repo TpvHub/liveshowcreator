@@ -47,6 +47,10 @@ export const routes = [
     path: '/clients/:clientId/users',
     component: Authenticate(Users)
   },
+  {
+    path: '/clients/:clientId/users/create',
+    component: Authenticate(AddUser)
+  },
 
   // User routes
   {

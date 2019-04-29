@@ -60,7 +60,7 @@ class Sidebar extends React.Component {
         label: 'Members',
         icon: <SupervisorAccount />,
         path: '/users',
-        roles: ['client', 'user']
+        roles: ['client']
       },
     ]
 

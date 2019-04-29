@@ -97,7 +97,10 @@ export const login = (user) => {
       service.mutation('login', user, fields).then((data) => {
 
         const user = _.get(data, 'user')
-        dispatch(setCurrentUser(user))
+        dispatch(setCurrentUser({
+          ...user,
+          client: _.get(data, 'client')
+        }))
         dispatch(setToken(data))
 
         return resolve(data)
@@ -222,7 +225,6 @@ export const getUsersByClient = (clientId, filter) => {
 
     service.query('getUsersByClient', { limit, skip, clientId },
       getModelFields('user')).then((models) => {
-        console.log(models)
         dispatch({
           type: SET_USER_MODEL,
           payload: {

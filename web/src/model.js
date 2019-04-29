@@ -63,5 +63,6 @@ export const models = {
     userId: {},
     created: {},
     user: userField,
+    client: clientRegisterFields
   },
 }

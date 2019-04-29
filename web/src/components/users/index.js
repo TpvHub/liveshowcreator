@@ -17,8 +17,8 @@ import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import styled from 'styled-components'
 import { getVisibleUsers } from '../../redux/selectors'
-import { 
-  deleteUser, 
+import {
+  deleteUser,
   getUsers,
   getUsersByClient
 } from '../../redux/actions'
@@ -91,10 +91,16 @@ class Users extends React.Component {
     this.getUsers(this.props)
   }
 
+  get clientId() {
+    return _.get(this.props.match.params, 'clientId', null)
+  }
+
   getUsers = (props) => {
+    const { currentUser } = this.props
     const filter = { limit: 50, skip: 0 }
 
-    const clientId = _.get(props.match.params, 'clientId', null)
+    const clientId = this.clientId || _.get(currentUser, 'client._id', null)
+
     if (clientId) {
       // Get Users by Client
       props.getUsersByClient(clientId, filter)
@@ -110,7 +116,11 @@ class Users extends React.Component {
   }
 
   handleCreateAccount() {
-    history.push('/users/create')
+    if (this.clientId) {
+      history.push(`/clients/${this.clientId}/users/create`)
+    } else {
+      history.push('/users/create')
+    }
   }
 
   handleSort = header_name => e => {
@@ -128,7 +138,11 @@ class Users extends React.Component {
   filterUsers = (user) => {
     const { currentUser } = this.props
 
-    if (_.includes(currentUser.roles, 'administrator') || _.includes(currentUser.roles, 'staff')) {
+    if (
+      currentUser &&
+      (_.includes(currentUser.roles, 'administrator') || _.includes(currentUser.roles, 'staff')) &&
+      !this.clientId
+    ) {
       return _.includes(user.roles, 'staff') || _.includes(user.roles, 'administrator')
     } else {
       return _.includes(user.roles, 'user')

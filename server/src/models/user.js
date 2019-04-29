@@ -98,14 +98,18 @@ export default class User extends Model {
         const originalPassword = _.get(model, 'password')
         const isMatched = bcrypt.compareSync(password, originalPassword)
         if (isMatched) {
-
           this.database.models().token.save(null, {
             userId: _.get(model, '_id'),
-          }).then((token) => {
+          }).then(async (token) => {
             _.unset(model, 'password')
             token = _.setWith(token, 'user', model)
-            return resolve(token)
+            token = _.setWith(token, 'client', 
+              model.roles[0] === 'client' ?
+              await this.database.models().client.findOne({ userId: model._id })  
+              : null
+            )
 
+            return resolve(token)
           }).catch((err) => {
             return reject(err)
           })
@@ -365,6 +369,9 @@ export default class User extends Model {
             user: {
               type: this.schema(),
             },
+            client: {
+              type: this.database.models().client.schema(),
+            },
           })),
         }),
         args: {
@@ -392,44 +399,54 @@ export default class User extends Model {
             try {
               hasPerm = await this.checkPermission(request, 'create', null)
               if (hasPerm) {
-                let newUser = await this.validate(null, args)
+                let newUser = Object.assign({}, args)
+                _.unset(newUser, 'clientId')
 
                 // client request roles
                 let userRoles = await this.getUserRoles(_.get(request, 'token.userId'))
+                let client = null
+                if (_.includes(args.roles, 'user')) {
+                  client = await this.database.models().client.findOne(
+                    args.clientId ? {
+                      _id: this.objectId(args.clientId)
+                    } : {
+                        userId: this.objectId(_.get(request, 'token.userId'))
+                      }
+                  )
+                }
 
                 // check if create administrator
-                const deepCheckPermission = () => new Promise((rs, rj) => {
-                  if (_.includes(userRoles, 'staff')) {
-                    // Only admin can create administrator and staff
-                    if (
-                      _.includes(newUser.roles, 'administrator') ||
-                      _.includes(newUser.roles, 'staff')
-                    ) return rj('Access denied')
+                const deepCheckPermission = () => new Promise(async (rs, rj) => {
+                  try {
+                    if (_.includes(userRoles, 'staff')) {
+                      // Only admin can create administrator and staff
+                      if (
+                        _.includes(newUser.roles, 'administrator')
+                        // || _.includes(newUser.roles, 'staff')
+                      ) return rj('Access denied')
+                    }
+
+                    if (_.includes(userRoles, 'client')) {
+                      // client can only create user
+
+                      if (
+                        _.includes(newUser.roles, 'administrator') ||
+                        _.includes(newUser.roles, 'staff') ||
+                        _.includes(newUser.roles, 'client') || 
+                        client._id.toString() !== args.clientId
+                      ) return rj('Access denied')
+                    }
+
+                    if (_.includes(userRoles, 'user')) return rj('Access denied')
+
+                    rs(true)
+                  } catch (err) {
+                    rj(err)
                   }
-
-                  if (_.includes(userRoles, 'client')) {
-                    // client can only create user
-                    if (
-                      _.includes(newUser.roles, 'administrator') ||
-                      _.includes(newUser.roles, 'staff') ||
-                      _.includes(newUser.roles, 'client')
-                    ) return rj('Access denied')
-                  }
-
-                  if (_.includes(userRoles, 'user')) return rj('Access denied')
-
-                  rs(true)
                 })
 
                 const checkClientCreateUser = (user) => new Promise(async (rs, rj) => {
                   if (_.includes(user.roles, 'user')) {
-                    let client = await this.database.models().client.findOne(
-                      args.clientId ? {
-                        _id: this.objectId(args.clientId)
-                      } : {
-                          userId: this.objectId(_.get(request, 'token.userId'))
-                        }
-                    )
                     if (client) {
                       client = await this.database.models().client.save(client._id, {
                         teamMembers: _.concat(client.teamMembers, user._id)
@@ -441,14 +458,9 @@ export default class User extends Model {
                   } rs()
                 })
 
-                const saveUser = (user) => {
-                  newUser = user
-                  return newUser
-                }
-
                 await composePromise(
                   newUser => checkClientCreateUser(newUser),
-                  user => saveUser(user),
+                  user => { newUser = user; return newUser },
                   _ => this.save(null, newUser),
                   _ => deepCheckPermission()
                 )()
