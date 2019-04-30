@@ -161,6 +161,11 @@ class Documents extends React.Component {
     })
   }
 
+  get hasPermissionAddDoc() {
+    const { currentUser } = this.props
+    return _.includes(_.get(currentUser, 'roles', []), 'client')
+  }
+
   handleMenuOpen(event, id) {
 
     this.setState({
@@ -393,7 +398,7 @@ class Documents extends React.Component {
               })
             }} loading={this.state.isLoadMore} />
 
-          {isStaffOrAdmin && (
+          {this.hasPermissionAddDoc && (
             <AddDocButton>
               <Tooltip id="tooltip-left-end" title="Create new show"
                 placement="left-end">

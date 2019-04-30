@@ -110,62 +110,63 @@ export default class Document extends Model {
    * @param model
    * @returns {Promise<any>}
    */
-  async afterSave (id, model) {
+  // async afterSave (id, model) {
 
-    const modelId = _.toString(_.get(model, '_id'))
-    const name = _.get(model, 'title', modelId)
-    const drivePromise = googleApi.createDocumentFolder(name ? name : modelId,
-      {documentId: modelId})
+  //   const modelId = _.toString(_.get(model, '_id'))
+  //   const name = _.get(model, 'title', modelId)
+  //   const drivePromise = googleApi.createDocumentFolder(name ? name : modelId,
+  //     {documentId: modelId})
 
-    return new Promise((resolve, reject) => {
+  //   return new Promise((resolve, reject) => {
+  //     console.log('after save document:', id)
 
-      if (!id) {
-        // if first time we do create a folder and wait for complete
-        drivePromise.then((file) => {
+  //     if (!id) {
+  //       // if first time we do create a folder and wait for complete
+  //       drivePromise.then((file) => {
 
-          const fileId = _.get(file, 'id')
-          model.driveId = fileId
+  //         const fileId = _.get(file, 'id')
+  //         model.driveId = fileId
 
-          //@todo for now let temporary give all user at tpvhub.net company has permission to read/write files in document folder
-          googleApi.createPermission(fileId, {
-              'type': 'user',
-              'role': 'writer',
-              'emailAddress': 'pvtinh1996@gmail.com'
-            },
-          ).catch((e) => {
-            console.log('error grant permission to drive folder.', e)
-          })
+  //         //@todo for now let temporary give all user at tpvhub.net company has permission to read/write files in document folder
+  //         googleApi.createPermission(fileId, {
+  //             'type': 'user',
+  //             'role': 'writer',
+  //             'emailAddress': 'pvtinh1996@gmail.com'
+  //           },
+  //         ).catch((e) => {
+  //           console.log('error grant permission to drive folder.', e)
+  //         })
 
-          // shared with owner
+  //         // shared with owner
 
-          return resolve(model)
-        }).catch((e) => {
-          console.log('An error create folder', e)
-          return resolve(model)
+  //         return resolve(model)
+  //       }).catch((e) => {
+  //         console.log('An error create folder', e)
+  //         return resolve(model)
 
-        })
+  //       })
 
-      } else {
-        // update drive id and save in silent
-        drivePromise.then((file) => {
+  //     } else {
+  //       // update drive id and save in silent
+  //       drivePromise.then((file) => {
 
-          this.shareDriveFolder(model, file.id).catch((e) => {
-            console.log('Share permission error', e)
-          })
+  //         this.shareDriveFolder(model, file.id).catch((e) => {
+  //           console.log('Share permission error', e.message)
+  //         })
 
-          model.driveId = _.get(file, 'id')
+  //         model.driveId = _.get(file, 'id')
 
-          this.save(id, model, true).catch((e) => {
-            console.log('An error save model after check drive folder.', e)
-          })
+  //         this.save(id, model, true).catch((e) => {
+  //           console.log('An error save model after check drive folder.', e)
+  //         })
 
-        })
+  //       })
 
-        return resolve(model)
-      }
+  //       return resolve(model)
+  //     }
 
-    })
-  }
+  //   })
+  // }
 
   /**
    * Share document to Email

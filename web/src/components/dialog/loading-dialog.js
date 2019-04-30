@@ -6,15 +6,24 @@ import LinearProgress from '@material-ui/core/LinearProgress'
 import { connect } from 'react-redux'
 import _ from 'lodash'
 
+import {
+  showLoadingDialog,
+} from '../../redux/actions/'
+
 class AlertDialog extends React.Component {
 
   render() {
-    const {open, handleClose, text} = this.props
+    const {
+      open,
+      handleClose,
+      text
+    } = this.props
+
     return (
       <div>
         <Dialog
           open={open}
-          onClose={() => handleClose()}
+          onClose={() => handleClose ? handleClose() : this.props.showLoadingDialog({ open: false })}
           aria-labelledby="alert-dialog-title"
           aria-describedby="alert-dialog-description"
         >
@@ -28,10 +37,12 @@ class AlertDialog extends React.Component {
   }
 }
 
-const mapStateToProps = (state) => ({
+const mapStateToProps = (state, props) => ({
   text: _.get(state, 'loadingDialog.text', ''),
   open: _.get(state, 'loadingDialog.open', false),
-  handleClose: _.get(state, 'loadingDialog.onClose', {}),
+  handleClose: _.get(state, 'loadingDialog.onClose', null),
 })
 
-export default connect(mapStateToProps, null)(AlertDialog)
+export default connect(mapStateToProps, {
+  showLoadingDialog
+})(AlertDialog)
