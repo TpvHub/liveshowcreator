@@ -14,6 +14,7 @@ import googleApi from '../google/googleapi'
 import _ from 'lodash'
 import { Map } from 'immutable'
 import Email from '../types/email'
+import { composePromise } from '../utils/common'
 
 export default class Document extends Model {
 
@@ -136,6 +137,44 @@ export default class Document extends Model {
           */
           const file = await createDocumentFolder
 
+          const getEmailsFromListUserIds = (userIds) => new Promise((rs, rj) => {
+            this.database.models().user.find({
+              _id: {
+                $in: userIds.map(uid => this.objectId(uid))
+              }
+            })
+              .then(listUser => {
+                rs(listUser.map(user => user.email))
+              })
+              .catch(rj)
+          })
+
+          // Share drive folder to all members
+          await composePromise(
+            listEmail => {
+              return Promise.all(
+                listEmail.map(
+                  emailAddress => new Promise((rs, rj) => {
+                    googleApi.createPermission(
+                      _.get(file, 'id'),
+                      {
+                        'type': 'user',
+                        'role': 'writer',
+                        'emailAddress': emailAddress,
+                      }
+                    ).then(_ => rs(emailAddress)).catch(_ => rs(emailAddress))
+                  })
+                )
+              )
+            },
+            getEmailsFromListUserIds
+          )(
+            _.concat(
+              client.teamMembers.map(uid => _.toString(uid)),
+              userId // client userId
+            )
+          )
+
           // save driveId for document
           const fileId = _.get(file, 'id')
           model.driveId = fileId
@@ -147,8 +186,9 @@ export default class Document extends Model {
           /**
           *  after update document
           */
-          createDocumentFolder.then(file => {
+          createDocumentFolder.then(async file => {
             model.driveId = _.get(file, 'id')
+
             this.save(id, model, true).catch((e) => {
               console.log('An error save model after check drive folder.', e)
             })
