@@ -17,7 +17,7 @@ import Email from '../types/email'
 
 export default class Document extends Model {
 
-  constructor (ctx) {
+  constructor(ctx) {
     super('document', 'document', ctx)
     this.shareDriveFolder = this.shareDriveFolder.bind(this)
 
@@ -30,7 +30,7 @@ export default class Document extends Model {
    * @param fileId
    * @returns {Promise<void>}
    */
-  async shareDriveFolder (model, fileId) {
+  async shareDriveFolder(model, fileId) {
 
     if (!model._id || !fileId) {
       return
@@ -81,20 +81,20 @@ export default class Document extends Model {
       const key = `${modelIdString}-${uid}`
       if (!this.sharedDriveUsers.get(key)) {
 
-        const user = await  this.database.models().user.get(uid)
+        const user = await this.database.models().user.get(uid)
 
         await googleApi.createPermission(fileId, {
-            'type': 'user',
-            'role': 'writer',
-            'emailAddress': user.email,
-          },
+          'type': 'user',
+          'role': 'writer',
+          'emailAddress': user.email,
+        },
         )
 
         // Share with people have link
         await googleApi.createPermission(fileId, {
-            'type': 'anyone',
-            'role': 'reader',
-          },
+          'type': 'anyone',
+          'role': 'reader',
+        },
         )
 
       }
@@ -110,63 +110,114 @@ export default class Document extends Model {
    * @param model
    * @returns {Promise<any>}
    */
-  // async afterSave (id, model) {
 
-  //   const modelId = _.toString(_.get(model, '_id'))
-  //   const name = _.get(model, 'title', modelId)
-  //   const drivePromise = googleApi.createDocumentFolder(name ? name : modelId,
-  //     {documentId: modelId})
+  async afterSave(id, model) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const modelId = _.toString(_.get(model, '_id'))
+        const name = _.get(model, 'title', modelId)
+        const userId = _.get(model, 'userId');
+        const client = await this.database.models().client.findOne({
+          userId: this.objectId(userId)
+        })
+        const clientDriveFolderId = _.get(client, 'driveFolderId')
 
-  //   return new Promise((resolve, reject) => {
-  //     console.log('after save document:', id)
+        const createDocumentFolder = googleApi.createDocumentFolder(
+          name ? name : modelId,
+          {
+            documentId: modelId,
+            parentFolderId: clientDriveFolderId
+          }
+        );
 
-  //     if (!id) {
-  //       // if first time we do create a folder and wait for complete
-  //       drivePromise.then((file) => {
+        if (!id) {
+          /**
+          *  after create document
+          */
+          const file = await createDocumentFolder
 
-  //         const fileId = _.get(file, 'id')
-  //         model.driveId = fileId
+          // save driveId for document
+          const fileId = _.get(file, 'id')
+          model.driveId = fileId
 
-  //         //@todo for now let temporary give all user at tpvhub.net company has permission to read/write files in document folder
-  //         googleApi.createPermission(fileId, {
-  //             'type': 'user',
-  //             'role': 'writer',
-  //             'emailAddress': 'pvtinh1996@gmail.com'
-  //           },
-  //         ).catch((e) => {
-  //           console.log('error grant permission to drive folder.', e)
-  //         })
+          // model = await this.save(id, model, true)
+          return resolve(model)
 
-  //         // shared with owner
+        } else {
+          /**
+          *  after update document
+          */
+          createDocumentFolder.then(file => {
+            model.driveId = _.get(file, 'id')
+            this.save(id, model, true).catch((e) => {
+              console.log('An error save model after check drive folder.', e)
+            })
+          })
 
-  //         return resolve(model)
-  //       }).catch((e) => {
-  //         console.log('An error create folder', e)
-  //         return resolve(model)
+          resolve(model)
+        }
+      } catch (err) {
+        console.log('afterSave document error', err, err.message)
+        reject(err)
+      }
+    })
 
-  //       })
+    // const modelId = _.toString(_.get(model, '_id'))
+    // const name = _.get(model, 'title', modelId)
 
-  //     } else {
-  //       // update drive id and save in silent
-  //       drivePromise.then((file) => {
+    // const drivePromise = googleApi.createDocumentFolder(name ? name : modelId,
+    //   { documentId: modelId })
 
-  //         this.shareDriveFolder(model, file.id).catch((e) => {
-  //           console.log('Share permission error', e.message)
-  //         })
+    // return new Promise((resolve, reject) => {
+    //   console.log('after save document:', id)
 
-  //         model.driveId = _.get(file, 'id')
+    //   if (!id) {
+    //     // if first time we do create a folder and wait for complete
+    //     drivePromise.then((file) => {
 
-  //         this.save(id, model, true).catch((e) => {
-  //           console.log('An error save model after check drive folder.', e)
-  //         })
+    //       const fileId = _.get(file, 'id')
+    //       model.driveId = fileId
 
-  //       })
+    //       //@todo for now let temporary give all user at tpvhub.net company has permission to read/write files in document folder
+    //       googleApi.createPermission(fileId, {
+    //         'type': 'user',
+    //         'role': 'writer',
+    //         'emailAddress': 'pvtinh1996@gmail.com'
+    //       },
+    //       ).catch((e) => {
+    //         console.log('error grant permission to drive folder.', e)
+    //       })
 
-  //       return resolve(model)
-  //     }
+    //       // shared with owner
 
-  //   })
-  // }
+    //       return resolve(model)
+    //     }).catch((e) => {
+    //       console.log('An error create folder', e)
+    //       return resolve(model)
+
+    //     })
+
+    //   } else {
+    //     // update drive id and save in silent
+    //     drivePromise.then((file) => {
+
+    //       this.shareDriveFolder(model, file.id).catch((e) => {
+    //         console.log('Share permission error', e.message)
+    //       })
+
+    //       model.driveId = _.get(file, 'id')
+
+    //       this.save(id, model, true).catch((e) => {
+    //         console.log('An error save model after check drive folder.', e)
+    //       })
+
+    //     })
+
+    //     return resolve(model)
+    //   }
+
+    // })
+  }
 
   /**
    * Share document to Email
@@ -174,11 +225,11 @@ export default class Document extends Model {
    * @param email
    * @param accessType
    */
-  async shareDocumentToEmail (id, email, accessType = 'read') {
+  async shareDocumentToEmail(id, email, accessType = 'read') {
 
     const User = this.database.models().user
 
-    const user = User.findOne({email: _.toLower(email)})
+    const user = User.findOne({ email: _.toLower(email) })
     if (user) {
       return this.shareDocumentToUser(id, user._id, accessType)
     } else {
@@ -194,7 +245,7 @@ export default class Document extends Model {
    * @param userId
    * @param accessType
    */
-  async shareDocumentToUser (id, userId, accessType = null) {
+  async shareDocumentToUser(id, userId, accessType = null) {
 
     const User = this.database.models().user
     const user = await User.get(userId)
@@ -215,10 +266,10 @@ export default class Document extends Model {
       this.cache_remove(id)
       if (accessType === 'write') {
         this.getCollection().updateOne(
-          {_id: document._id},
+          { _id: document._id },
           {
-            $pull: {readPermissions: user._id},
-            $addToSet: {writePermissions: user._id},
+            $pull: { readPermissions: user._id },
+            $addToSet: { writePermissions: user._id },
           },
           (err, result) => {
             if (err) {
@@ -239,10 +290,10 @@ export default class Document extends Model {
       }
       else if (accessType === 'read') {
         this.getCollection().updateOne(
-          {_id: document._id},
+          { _id: document._id },
           {
-            $pull: {writePermissions: user._id},
-            $addToSet: {readPermissions: user._id},
+            $pull: { writePermissions: user._id },
+            $addToSet: { readPermissions: user._id },
           },
           (err, result) => {
             if (err) {
@@ -264,9 +315,9 @@ export default class Document extends Model {
 
         // let remove read & write permission
         this.getCollection().updateOne(
-          {_id: document._id},
+          { _id: document._id },
           {
-            $pull: {writePermissions: user._id, readPermissions: user._id},
+            $pull: { writePermissions: user._id, readPermissions: user._id },
           },
           (err, result) => {
             return err ? reject(err) : resolve({
@@ -290,7 +341,7 @@ export default class Document extends Model {
    * @param id
    * @returns {Promise<*>}
    */
-  async getDocumentPermissions (id) {
+  async getDocumentPermissions(id) {
 
     if (!id) {
       return Promise.reject('Id is required')
@@ -349,7 +400,7 @@ export default class Document extends Model {
    * @param userId
    * @returns {Promise<any>}
    */
-  async checkDocumentAccess (id, userId) {
+  async checkDocumentAccess(id, userId) {
 
     return new Promise(async (resolve, reject) => {
       if (!id) {
@@ -371,26 +422,42 @@ export default class Document extends Model {
         })
       }
 
-      const model = await this.get(id)
-
       let access = {
         read: false,
         write: false
       }
 
-      _.each(_.get(model, 'writePermissions', []), (uid) => {
-        if (_.toString(uid) === _.toString(userId)) {
-          access.write = true
-          access.read = true
+      const model = await this.get(id)
+      if (_.toString(model.userId) === _.toString(userId)) {
+        // Owner has full permissions
+        access = {
+          read: true,
+          write: true
         }
-      })
-      if (access.read === false) {
-        _.each(_.get(model, 'readPermissions', []), (uid) => {
-          if (_.toString(uid) === _.toString(userId)) {
-            access.read = true
+      } else {
+        const client = await this.database.models().client.findOne({ userId: this.objectId(model.userId) })
+        const teamMembers = client.teamMembers.map(memId => _.toString(memId))
+        if (_.includes(teamMembers, _.toString(userId))) {
+          access = {
+            read: true,
+            write: true
           }
-        })
+        }
       }
+
+      // _.each(_.get(model, 'writePermissions', []), (uid) => {
+      //   if (_.toString(uid) === _.toString(userId)) {
+      //     access.write = true
+      //     access.read = true
+      //   }
+      // })
+      // if (access.read === false) {
+      //   _.each(_.get(model, 'readPermissions', []), (uid) => {
+      //     if (_.toString(uid) === _.toString(userId)) {
+      //       access.read = true
+      //     }
+      //   })
+      // }
 
       return resolve(access)
 
@@ -400,7 +467,7 @@ export default class Document extends Model {
   /**
    * Override Mutation
    */
-  mutation () {
+  mutation() {
     const parentMutation = super.mutation()
 
     const createDocumentPermissionType = new GraphQLObjectType({
@@ -428,6 +495,32 @@ export default class Document extends Model {
     })
 
     const mutation = {
+      // create_document: {
+      //   type: this.schema('mutation'),
+      //   args: this.fields(),
+      //   resolve: async (value, args, request) => {
+      //     return new Promise(async (resolve, reject) => {
+      //       /**
+      //         *  create document
+      //         */
+
+      //       try {
+      //         let hasPerm = false
+      //         const userId = 
+
+      //         hasPerm = await this.checkPermission(request, 'create', null)
+      //         if (hasPerm) {
+
+
+      //         } else {
+      //           reject('Access denied')
+      //         }
+      //       } catch(err) {
+      //         reject(err)
+      //       }
+      //     })
+      //   }
+      // },
       update_document: {
         type: this.schema('mutation'),
         args: this.fields(),
@@ -475,7 +568,7 @@ export default class Document extends Model {
             let relations = []
             _.each(this.relations(), (v, k) => {
               if (v.type === 'belongTo') {
-                relations.push({name: k, relation: v})
+                relations.push({ name: k, relation: v })
               }
             })
             for (let i in relations) {
@@ -580,7 +673,7 @@ export default class Document extends Model {
   /**
    * Override query
    */
-  query () {
+  query() {
 
     const _schema = this.schema('query')
     const parentQuery = super.query()
@@ -588,17 +681,17 @@ export default class Document extends Model {
     const documentPermissionType = new GraphQLObjectType({
       name: 'getDocumentPermissions',
       fields: ({
-        type: {type: GraphQLString},
-        userId: {type: GraphQLID},
-        documentId: {type: GraphQLID},
+        type: { type: GraphQLString },
+        userId: { type: GraphQLID },
+        documentId: { type: GraphQLID },
         user: {
           type: new GraphQLObjectType({
             name: 'documentPermissionUser',
             fields: ({
-              _id: {type: GraphQLID},
-              firstName: {type: GraphQLString},
-              lastName: {type: GraphQLString},
-              avatar: {type: GraphQLString},
+              _id: { type: GraphQLID },
+              firstName: { type: GraphQLString },
+              lastName: { type: GraphQLString },
+              avatar: { type: GraphQLString },
             }),
           }),
         },
@@ -645,17 +738,17 @@ export default class Document extends Model {
               findQuery = {
                 $or: [
                   {
-                    readPermissions: {$all: [userId]}
+                    readPermissions: { $all: [userId] }
                   },
                   {
-                    writePermissions: {$all: [userId]}
+                    writePermissions: { $all: [userId] }
                   }
                 ]
               }
             }
 
-            if(search){
-              findQuery = {$text: {$search: search}}
+            if (search) {
+              findQuery = { $text: { $search: search } }
             }
 
             this.count(findQuery).then((num) => {
@@ -785,22 +878,41 @@ export default class Document extends Model {
               // staff and administrator we allow get all documents
               findQuery = null
             } else {
+              if (_.includes(roles, 'client')) {
+                // let custom query
+                findQuery = {
+                  userId
 
-              // let custom query
-              findQuery = {
-                $or: [
-                  {
-                    readPermissions: {$all: [userId]}
-                  },
-                  {
-                    writePermissions: {$all: [userId]}
+                  // $or: [
+                  //   {
+                  //     readPermissions: { $all: [userId] }
+                  //   },
+                  //   {
+                  //     writePermissions: { $all: [userId] }
+                  //   }
+                  // ]
+                }
+              }
+              if (_.includes(roles, 'user')) {
+                // find client of user
+                const client = await this.database.models().client.findOne({
+                  teamMembers: { $all: [userId] }
+                })
+
+                if (client) {
+                  findQuery = {
+                    userId: client.userId
                   }
-                ]
+                } else {
+                  findQuery = {
+                    userId: null
+                  }
+                }
               }
             }
 
-            if(search){
-              findQuery = {$text: {$search: search}}
+            if (search) {
+              findQuery = { $text: { $search: search } }
             }
 
             const filter = {
@@ -850,7 +962,7 @@ export default class Document extends Model {
                         _id: localId,
                       }
                       relationResult = await relationSetting.model.find(
-                        findQuery, {skip: 0, limit: 50})
+                        findQuery, { skip: 0, limit: 50 })
                     } catch (e) {
 
                     }
@@ -869,7 +981,7 @@ export default class Document extends Model {
       getDocumentPermissions: {
         type: GraphQLList(documentPermissionType),
         args: {
-          id: {type: GraphQLNonNull(GraphQLID)},
+          id: { type: GraphQLNonNull(GraphQLID) },
         },
         resolve: async (value, args, request) => {
           return this.getDocumentPermissions(args.id)
@@ -879,8 +991,8 @@ export default class Document extends Model {
         type: new GraphQLObjectType({
           name: 'checkDocumentAccess',
           fields: () => ({
-            read: {type: GraphQLBoolean},
-            write: {type: GraphQLBoolean}
+            read: { type: GraphQLBoolean },
+            write: { type: GraphQLBoolean }
           })
         }),
         args: {
@@ -912,7 +1024,7 @@ export default class Document extends Model {
     return Object.assign(parentQuery, query)
   }
 
-  fields () {
+  fields() {
 
     return {
       _id: {
@@ -959,7 +1071,7 @@ export default class Document extends Model {
     }
   }
 
-  relations () {
+  relations() {
     return {
       user: {
         type: 'belongTo',
@@ -972,7 +1084,7 @@ export default class Document extends Model {
     }
   }
 
-  permissions () {
+  permissions() {
 
     return [
       {
@@ -991,18 +1103,28 @@ export default class Document extends Model {
         permission: 'ALLOW',
       },
       {
-        accessType: 'findById',
+        accessType: '*',
         role: 'owner',
         permission: 'ALLOW',
       },
+      // {
+      //   accessType: 'findById',
+      //   role: 'owner',
+      //   permission: 'ALLOW',
+      // },
+      // {
+      //   accessType: 'updateById',
+      //   role: 'owner',
+      //   permission: 'ALLOW',
+      // },
       {
-        accessType: 'updateById',
-        role: 'owner',
+        accessType: 'create',
+        role: 'staff',
         permission: 'ALLOW',
       },
       {
         accessType: 'create',
-        role: 'staff',
+        role: 'client',
         permission: 'ALLOW',
       },
       {
@@ -1011,8 +1133,18 @@ export default class Document extends Model {
         permission: 'ALLOW',
       },
       {
+        accessType: 'find',
+        role: 'client',
+        permission: 'ALLOW',
+      },
+      {
         accessType: 'findById',
         role: 'staff',
+        permission: 'ALLOW',
+      },
+      {
+        accessType: 'findById',
+        role: 'user',
         permission: 'ALLOW',
       },
       {
@@ -1031,10 +1163,15 @@ export default class Document extends Model {
         permission: 'ALLOW',
       },
       {
-        accessType: 'createDocumentPermission',
-        role: 'owner',
-        permission: 'ALLOW',
+        accessType: 'deleteById',
+        role: 'user',
+        permission: 'DENY',
       },
+      // {
+      //   accessType: 'createDocumentPermission',
+      //   role: 'owner',
+      //   permission: 'ALLOW',
+      // },
     ]
   }
 }

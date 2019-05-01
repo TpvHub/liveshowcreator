@@ -176,7 +176,9 @@ class GoogleApi {
         'name': _.trim(name),
         'mimeType': 'application/vnd.google-apps.folder',
         'appProperties': attributes,
-        'parents': [LIVESHOWCREATOR_TPVHUB_FOLDER_ID]
+        'parents': [
+          attributes.parentFolderId ? attributes.parentFolderId : LIVESHOWCREATOR_TPVHUB_FOLDER_ID
+        ]
       }
 
       if (!findDocumentFolder || findDocumentFolder.length === 0) {
