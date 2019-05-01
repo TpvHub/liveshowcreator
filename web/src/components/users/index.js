@@ -26,6 +26,18 @@ import { history } from '../../hostory'
 import MenuAction from '../menu-action'
 import ConfirmDeleteDialog from '../documents/confirm-delete-dialog'
 
+import CustomTable from '../tables'
+
+const columnData = [
+  { id: 'avatar', numeric: false, disablePadding: true, label: '#' },
+  { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
+  { id: 'email', numeric: false, disablePadding: false, label: 'Email' },
+  { id: 'role', numeric: false, disablePadding: false, label: 'Roles' },
+  { id: 'status', numeric: false, disablePadding: false, label: 'Status' },
+  { id: 'updated', numeric: false, disablePadding: false, label: 'Last modified' },
+  { id: 'actions', numeric: false, disablePadding: false, label: 'Actions' },
+];
+
 const Container = styled.div`
   padding: 15px 0;
  @media (min-width: 992px){
@@ -65,6 +77,7 @@ class Users extends React.Component {
       modelName: 'user',
       deleteModel: null,
       users: [],
+      dataTable: [],
     }
 
     this.sortUsersMeta = {
@@ -82,7 +95,19 @@ class Users extends React.Component {
           ...user,
           name: `${_.get(user, 'firstName', '')} ${_.get(user, 'lastName', '')}`,
           role: _.join(_.get(user, 'roles', []), ', ')
-        }))
+        })),
+        dataTable: nextProps.users.map((n, index) => {
+          return {
+            id: index + 1,
+            avatar: this.geAvatar(n),
+            name: `${_.get(n, 'firstName', '')} ${_.get(n, 'lastName', '')}`,
+            email: _.get(n, 'email', null),
+            role: _.join(_.get(n, 'roles', []), ', '),
+            status: _.get(n, 'status', null),
+            updated: _.get(n, 'updated', null),
+            actions: this.getActions(n)
+          }
+        })
       })
     }
   }
@@ -93,6 +118,58 @@ class Users extends React.Component {
 
   get clientId() {
     return _.get(this.props.match.params, 'clientId', null)
+  }
+
+  geAvatar = (n) => {
+    const userAvatar = _.get(n, 'avatar', null)
+    return (
+      <TableCell>
+        <IconButton
+          onClick={() => this.goToProfile(n)}
+          aria-haspopup="true"
+          color="primary">
+          {
+            userAvatar ?
+              (<img className={'user-avatar'} src={userAvatar}
+                alt={''} />) :
+              (<AccountCircle />)
+          }
+        </IconButton>
+      </TableCell>
+    )
+  }
+
+  getActions = (n) => {
+    const menuOptions = [
+      { label: 'Edit', key: 'edit' },
+      { label: 'Delete', key: 'delete' },
+    ]
+    return (
+      <TableCell numeric>
+        <MenuAction onSelect={(op) => {
+          switch (op.key) {
+
+            case 'edit':
+
+              history.push(`/users/${n._id}/edit`)
+
+              break
+
+            case 'delete':
+
+              this.setState({
+                deleteModel: n,
+              })
+
+              break
+
+            default:
+
+              break
+          }
+        }} options={menuOptions} />
+      </TableCell>
+    )
   }
 
   getUsers = (props) => {
@@ -136,32 +213,40 @@ class Users extends React.Component {
   }
 
   filterUsers = (user) => {
-    const { currentUser } = this.props
+    // const { currentUser } = this.props
 
-    if (
-      currentUser &&
-      (_.includes(currentUser.roles, 'administrator') || _.includes(currentUser.roles, 'staff')) &&
-      !this.clientId
-    ) {
-      return _.includes(user.roles, 'staff') || _.includes(user.roles, 'administrator')
-    } else {
-      return _.includes(user.roles, 'user')
-    }
+    // if (
+    //   currentUser &&
+    //   (_.includes(currentUser.roles, 'administrator') || _.includes(currentUser.roles, 'staff')) &&
+    //   !this.clientId
+    // ) {
+    //   return _.includes(user.roles, 'staff') || _.includes(user.roles, 'administrator')
+    // } else {
+    //   return _.includes(user.roles, 'user')
+    // }
+    return true
   }
 
   render() {
 
-    const { users } = this.state
+    const { users, dataTable } = this.state
     const { currentUser } = this.props
 
     const menuOptions = [
       { label: 'Edit', key: 'edit' },
       { label: 'Delete', key: 'delete' },
     ]
+
     return (
       <Layout>
         <Container>
-          <Table>
+          <CustomTable
+            tableName='Users table'
+            tableColumnData={columnData}
+            data={dataTable}
+          />
+
+          {/* <Table>
             <TableHead>
               <TableRow>
                 <TableCell>#</TableCell>
@@ -231,7 +316,9 @@ class Users extends React.Component {
                 )
               })}
             </TableBody>
-          </Table>
+          </Table> */}
+
+
           <ConfirmDeleteDialog onClose={(action) => {
             switch (action) {
               case 'delete':

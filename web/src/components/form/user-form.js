@@ -114,7 +114,6 @@ class UserForm extends React.Component {
 
     }
     this.props.getRoles().then((data) => {
-      console.log(data)
       this.setState({
         roleList: _.get(data, 'roleList', []),
         userRoles: _.get(data, 'userRoles', []),
@@ -125,6 +124,12 @@ class UserForm extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     this.setUserTeamName(nextProps)
+  }
+
+  get isStaffOrAdmin() {
+    const { roles } = this.props.currentUser
+
+    return _.includes(roles, 'staff') || _.includes(roles, 'administrator')
   }
 
   _onChange(e) {
@@ -337,33 +342,38 @@ class UserForm extends React.Component {
         } */}
 
         {
-          this.state.roleList.length ? 
-          <React.Fragment>
-            <br />
-            <CustomSelect
-              name='roles'
-              className='selector-userRole'
-              options={this.state.roleList.filter(this.filterRoleList)}
-              label='Role'
-              required
-              onChange={(e) => { this._onChange({ target: { name: 'roles', value: [e] } }) }}
-              value={userRoles[0]}
-            />
-          </React.Fragment>
-          : null
+          this.state.roleList.length ?
+            <React.Fragment>
+              <br />
+              <CustomSelect
+                name='roles'
+                className='selector-userRole'
+                options={this.state.roleList.filter(this.filterRoleList)}
+                label='Role'
+                required
+                onChange={(e) => { this._onChange({ target: { name: 'roles', value: [e] } }) }}
+                value={userRoles[0]}
+              />
+            </React.Fragment>
+            : null
+        }
+        {
+          this.isStaffOrAdmin ?
+            <React.Fragment>
+              <br />
+              <CustomSelect
+                name='status'
+                className='selector-userStatus'
+                options={this.state.statusList}
+                label='Status'
+                required
+                onChange={(e) => { this._onChange({ target: { name: 'status', value: e } }) }}
+                value={model.status}
+              />
+            </React.Fragment>
+            : null
         }
 
-        <br />
-
-        <CustomSelect
-          name='status'
-          className='selector-userStatus'
-          options={this.state.statusList}
-          label='Status'
-          required
-          onChange={(e) => { this._onChange({ target: { name: 'status', value: e } }) }}
-          value={model.status}
-        />
 
         <br />
         <br />

@@ -34,6 +34,19 @@ import { history } from '../../hostory'
 import MenuAction from '../menu-action'
 import ConfirmDeleteDialog from '../documents/confirm-delete-dialog'
 
+import CustomTable from '../tables'
+
+const columnData = [
+  { id: 'avatar', numeric: false, disablePadding: true, label: '#' },
+  { id: 'teamName', numeric: false, disablePadding: false, label: 'Team\'s Name' },
+  { id: 'email', numeric: false, disablePadding: false, label: 'Email' },
+  { id: 'numOfUsers', numeric: false, disablePadding: false, label: 'Users' },
+  { id: 'numOfUsersOnline', numeric: false, disablePadding: false, label: 'Online' },
+  { id: 'numOfShows', numeric: false, disablePadding: false, label: 'Shows' },
+  { id: 'driveUsed', numeric: false, disablePadding: false, label: 'Drive used' },
+  { id: 'status', numeric: false, disablePadding: false, label: 'Status' },
+  { id: 'actions', numeric: false, disablePadding: false, label: 'Actions' },
+];
 
 const Container = styled.div`
   padding: 15px 0;
@@ -68,46 +81,32 @@ class Clients extends React.Component {
     this.state = {
       modelName: 'user',
       deleteModel: null,
-      teamDriveModel: new Map()
+      teamDriveModel: new Map(),
+      dataTable: [],
     }
   }
 
   componentWillReceiveProps(nextProps) {
-    // const {
-    //   clientRichInfoList,
-    //   clients,
-    //   usersOnlineList
-    // } = nextProps
+    const {
+      clients,
+    } = nextProps
 
-    // const { teamDriveModel } = this.state
-    // if (clients.size == 0) {
-    //   teamDriveModel.clear();
-    // } else {
-    //   clientRichInfoList.toArray().forEach(_item => {
-    //     if (teamDriveModel.get(_item._id)) {
-    //       teamDriveModel.set(_item._id, Object.assign(teamDriveModel.get(_item._id), _item))
-    //     }
-    //   })
-
-    //   clients.toArray().forEach(_item => {
-    //     teamDriveModel.set(_item.teamdriveId, Object.assign(teamDriveModel.get(_item.teamdriveId) || {}, _item))
-    //   })
-
-    //   usersOnlineList.toArray().forEach(_item => {
-    //     const lastItem = teamDriveModel.get(_item.teamdriveId) || {}
-    //     const totalOnline = _.get(lastItem, 'totalOnline', 0) + 1
-    //     const oldUsersOnline = _.get(lastItem, 'usersOnline', [])
-    //     if (oldUsersOnline.filter(u => u._id === _item._id).length === 0) {
-    //       const usersOnline = [...oldUsersOnline, _item]
-    //       teamDriveModel.set(_item.teamdriveId, Object.assign(lastItem, { totalOnline, usersOnline }))
-    //     }
-    //   })
-    // }
-
-    // teamDriveModel.delete('0')
-
-    // this.setState({ teamDriveModel })
-
+    this.setState({
+      dataTable: clients.map((n, index) => {
+        return {
+          id: index + 1,
+          avatar: this.geAvatar(n),
+          teamName: _.get(n, 'teamName', ''),
+          email: _.get(n, 'email', ''),
+          numOfUsers: this.renderUsers(n),
+          numOfUsersOnline: _.get(n, 'numOfUsersOnline', 0),
+          numOfShows: _.get(n, 'numOfShows', 0),
+          driveUsed: _.get(n, 'driveUsed', 0),
+          status: _.get(n, 'status', 'pending'),
+          actions: this.getActions(n)
+        }
+      })
+    })
   }
 
   componentDidMount() {
@@ -116,6 +115,62 @@ class Clients extends React.Component {
     // this.props.getListUsersOnline()
     // this.props.getClientRichInfo()
 
+  }
+
+  geAvatar = (n) => {
+    const userAvatar = _.get(n, 'avatar', null)
+    return (
+      <TableCell>
+        <IconButton
+          onClick={() => this.goToProfile(n)}
+          aria-haspopup="true"
+          color="primary">
+          {
+            userAvatar ?
+              (<img className={'user-avatar'} src={userAvatar}
+                alt={''} />) :
+              (<AccountCircle />)
+          }
+        </IconButton>
+      </TableCell>
+    )
+  }
+
+  getActions = (n) => {
+    const menuOptions = [
+      { label: 'Edit', key: 'edit' },
+      { label: 'Delete', key: 'delete' },
+    ]
+    return (
+      <TableCell numeric>
+        <MenuAction onSelect={(op) => {
+          switch (op.key) {
+
+            case 'edit':
+
+              history.push(`/users/${n._id}/edit`)
+
+              break
+
+            case 'delete':
+
+              this.setState({
+                deleteModel: n,
+              })
+
+              break
+
+            default:
+
+              break
+          }
+        }} options={menuOptions} />
+      </TableCell>
+    )
+  }
+
+  renderUsers = (n) => {
+    return <TableCell style={{ cursor: "pointer" }} onClick={() => this.goToUserPage(n)}>{n.numOfUsers}</TableCell>
   }
 
   setClients = (clients) => {
@@ -137,7 +192,7 @@ class Clients extends React.Component {
   }
 
   render() {
-    const { teamDriveModel } = this.state
+    const { teamDriveModel, dataTable } = this.state
     const { clients } = this.props
     // let teamDrive, permission = []
 
@@ -149,7 +204,13 @@ class Clients extends React.Component {
     return (
       <Layout>
         <Container>
-          <Table>
+          <CustomTable
+            tableName='Users table'
+            tableColumnData={columnData}
+            data={dataTable}
+          />
+
+          {/* <Table>
             <TableHead>
               <TableRow>
                 <TableCell>#</TableCell>
@@ -204,7 +265,7 @@ class Clients extends React.Component {
                     <TableCell>{numOfUsersOnline}</TableCell>
                     <TableCell>{numOfShows}</TableCell>
                     <TableCell>{driveUsed}</TableCell>
-                    
+
                     <TableCell>{status}</TableCell>
 
                     <TableCell numeric>
@@ -236,7 +297,7 @@ class Clients extends React.Component {
                 )
               })}
             </TableBody>
-          </Table>
+          </Table> */}
           <ConfirmDeleteDialog onClose={(action) => {
             switch (action) {
               case 'delete':
