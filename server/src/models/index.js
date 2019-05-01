@@ -1119,7 +1119,7 @@ export default class Model {
       },
 
       [`delete_${name}`]: {
-        type: GraphQLID,
+        type: this.schema('mutation'),
         args: {
           id: {
             type: new GraphQLNonNull(GraphQLID),

@@ -495,32 +495,6 @@ export default class Document extends Model {
     })
 
     const mutation = {
-      // create_document: {
-      //   type: this.schema('mutation'),
-      //   args: this.fields(),
-      //   resolve: async (value, args, request) => {
-      //     return new Promise(async (resolve, reject) => {
-      //       /**
-      //         *  create document
-      //         */
-
-      //       try {
-      //         let hasPerm = false
-      //         const userId = 
-
-      //         hasPerm = await this.checkPermission(request, 'create', null)
-      //         if (hasPerm) {
-
-
-      //         } else {
-      //           reject('Access denied')
-      //         }
-      //       } catch(err) {
-      //         reject(err)
-      //       }
-      //     })
-      //   }
-      // },
       update_document: {
         type: this.schema('mutation'),
         args: this.fields(),

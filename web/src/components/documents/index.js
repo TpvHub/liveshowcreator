@@ -277,7 +277,7 @@ class Documents extends React.Component {
       },
     ]
 
-    if (isStaffOrAdmin) {
+    if (this.hasPermissionAddDoc || isStaffOrAdmin) {
       options = [
 
         {
