@@ -233,6 +233,16 @@ export default class Access extends Model {
         permission: 'ALLOW',
       },
       {
+        accessType: 'create',
+        role: 'user',
+        permission: 'ALLOW',
+      },
+      {
+        accessType: 'create',
+        role: 'client',
+        permission: 'ALLOW',
+      },
+      {
         accessType: 'findById',
         role: 'owner',
         permission: 'ALLOW',
@@ -250,6 +260,16 @@ export default class Access extends Model {
       {
         accessType: 'find',
         role: 'staff',
+        permission: 'ALLOW',
+      },
+      {
+        accessType: 'find',
+        role: 'user',
+        permission: 'ALLOW',
+      },
+      {
+        accessType: 'find',
+        role: 'client',
         permission: 'ALLOW',
       },
     ]
