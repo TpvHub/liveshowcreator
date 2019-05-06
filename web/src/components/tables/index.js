@@ -116,7 +116,7 @@ const toolbarStyles = theme => ({
 });
 
 let EnhancedTableToolbar = props => {
-    const { numSelected, classes, tableName } = props;
+    const { numSelected, classes, tableName, ExtraFilter } = props;
 
     return (
         <Toolbar
@@ -136,7 +136,7 @@ let EnhancedTableToolbar = props => {
                     )}
             </div>
             <div className={classes.spacer} />
-            <div className={classes.actions}>
+            <div style={{ width: !ExtraFilter ? 'auto' : `${250 * ExtraFilter.numExtra}px` }} className={classes.actions}>
                 {numSelected > 0 ? (
                     <Tooltip title="Delete">
                         <IconButton aria-label="Delete">
@@ -145,9 +145,12 @@ let EnhancedTableToolbar = props => {
                     </Tooltip>
                 ) : (
                         <Tooltip title="Filter list">
-                            <IconButton aria-label="Filter list">
-                                <FilterListIcon />
-                            </IconButton>
+                            {
+                                ExtraFilter ? ExtraFilter.Component :
+                                    <IconButton aria-label="Filter list">
+                                        <FilterListIcon />
+                                    </IconButton>
+                            }
                         </Tooltip>
                     )}
             </div>
@@ -266,7 +269,7 @@ class EnhancedTable extends React.Component {
     isSelected = id => this.state.selected.indexOf(id) !== -1;
 
     render() {
-        const { classes, tableColumnData } = this.props;
+        const { classes, tableColumnData, ExtraFilter } = this.props;
         const { data, order, orderBy, selected, rowsPerPage, page } = this.state;
         const emptyRows = rowsPerPage - Math.min(rowsPerPage, data.size - page * rowsPerPage);
 
@@ -283,6 +286,7 @@ class EnhancedTable extends React.Component {
                             onRequestSort={this.handleRequestSort}
                             rowCount={data.size}
                             columnData={tableColumnData}
+                            ExtraFilter
                         />
                         <TableBody>
                             {data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(n => {

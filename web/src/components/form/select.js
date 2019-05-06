@@ -102,7 +102,7 @@ class CustomSelect extends React.Component {
     selectOptions = selectOptions.concat(options)
 
     return (
-      <div className={className ? className : null}>
+      <div style={{ display: 'inline-block', marginRight: '15px' }} className={className ? className : null}>
         <FormControl className={classes.formControl}>
           {label && <InputLabel htmlFor={theID}>{label}</InputLabel>}
           <Select

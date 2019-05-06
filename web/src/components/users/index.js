@@ -27,6 +27,8 @@ import MenuAction from '../menu-action'
 import ConfirmDeleteDialog from '../documents/confirm-delete-dialog'
 
 import CustomTable from '../tables'
+import CustomSelect from '../form/select'
+
 
 const columnData = [
   { id: 'avatar', numeric: false, disablePadding: true, label: '#' },
@@ -78,6 +80,10 @@ class Users extends React.Component {
       deleteModel: null,
       users: [],
       dataTable: [],
+      filter: {
+        role: 'all',
+        status: 'all'
+      }
     }
 
     this.sortUsersMeta = {
@@ -90,25 +96,7 @@ class Users extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.users) {
-      this.setState({
-        users: nextProps.users.map(user => ({
-          ...user,
-          name: `${_.get(user, 'firstName', '')} ${_.get(user, 'lastName', '')}`,
-          role: _.join(_.get(user, 'roles', []), ', ')
-        })),
-        dataTable: nextProps.users.map((n, index) => {
-          return {
-            id: index + 1,
-            avatar: this.geAvatar(n),
-            name: `${_.get(n, 'firstName', '')} ${_.get(n, 'lastName', '')}`,
-            email: _.get(n, 'email', null),
-            role: _.join(_.get(n, 'roles', []), ', '),
-            status: _.get(n, 'status', null),
-            updated: _.get(n, 'updated', null),
-            actions: this.getActions(n)
-          }
-        })
-      })
+      this.setDataTable(nextProps.users)
     }
   }
 
@@ -118,6 +106,35 @@ class Users extends React.Component {
 
   get clientId() {
     return _.get(this.props.match.params, 'clientId', null)
+  }
+
+  filterUsers = u => {
+    const { filter } = this.state
+    let check = Object.entries(filter).reduce((acc, [key, value]) => {
+      return value !== 'all' ? (
+        u[key] === value ? acc === null ? true : acc && true : false 
+      )
+        : acc
+    }, null)
+
+    return check == null ? true : check
+  }
+
+  setDataTable = (users) => {
+    this.setState({
+      dataTable: users.toArray().map((n, index) => {
+        return {
+          id: index + 1,
+          avatar: this.geAvatar(n),
+          name: `${_.get(n, 'firstName', '')} ${_.get(n, 'lastName', '')}`,
+          email: _.get(n, 'email', null),
+          role: _.join(_.get(n, 'roles', []), ', '),
+          status: _.get(n, 'status', null),
+          updated: _.get(n, 'updated', null),
+          actions: this.getActions(n)
+        }
+      }).filter(this.filterUsers)
+    })
   }
 
   geAvatar = (n) => {
@@ -212,19 +229,13 @@ class Users extends React.Component {
     })
   }
 
-  filterUsers = (user) => {
-    // const { currentUser } = this.props
-
-    // if (
-    //   currentUser &&
-    //   (_.includes(currentUser.roles, 'administrator') || _.includes(currentUser.roles, 'staff')) &&
-    //   !this.clientId
-    // ) {
-    //   return _.includes(user.roles, 'staff') || _.includes(user.roles, 'administrator')
-    // } else {
-    //   return _.includes(user.roles, 'user')
-    // }
-    return true
+  setFilter = (filter) => data => {
+    this.setState({
+      filter: {
+        ...this.state.filter,
+        [filter]: data
+      }
+    })
   }
 
   render() {
@@ -243,7 +254,30 @@ class Users extends React.Component {
           <CustomTable
             tableName='Users table'
             tableColumnData={columnData}
-            data={dataTable}
+            data={dataTable.filter(this.filterUsers)}
+            ExtraFilter={{
+              numExtra: 2,
+              Component: <React.Fragment>
+                <CustomSelect
+                  name='filerRole'
+                  className='selector-filerRole'
+                  options={['all', 'administrator', 'staff', 'user', 'client']}
+                  label='Select Role'
+                  required
+                  onChange={this.setFilter('role')}
+                  value={this.state.filter.role}
+                />
+                <CustomSelect
+                  name='filerStatus'
+                  className='selector-filerStatus'
+                  options={['all', 'pending', 'actived', 'blocked']}
+                  label='Select Status'
+                  required
+                  onChange={this.setFilter('status')}
+                  value={this.state.filter.status}
+                />
+              </React.Fragment>
+            }}
           />
 
           {/* <Table>

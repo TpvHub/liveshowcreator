@@ -270,7 +270,7 @@ class UserForm extends React.Component {
         _.includes(model.roles, 'staff')
       ) return role === 'administrator' || role === 'staff'
 
-      return role === 'user'
+      return role === model.roles[0]
     }
 
     // Create user mode
