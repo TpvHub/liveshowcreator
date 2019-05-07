@@ -200,30 +200,6 @@ class EditDocument extends React.Component {
 
   }
 
-  listenKeyDown (e) {
-    if (e.keyCode === 27 && this.props.printLayout) {
-      //esc press so we need to reset print layout
-      this.props.togglePrintLayout(false)
-    }
-
-    // clear Block format when press ENTER
-    if (e.keyCode === 13) {
-      let currentSelectedFormat = {}
-      const selection = this.editorRef.getSelection()
-      try {
-        currentSelectedFormat = this.editorRef.getFormat(selection)
-      } catch (error) {
-        // TODO: handle error here
-        console.log(error)        
-      }
-
-      if (_.get(currentSelectedFormat, 'heading', false) === true) {
-        const delta = this.editorRef.format('heading', false, 'user')
-        this.updateEditorContent(delta, 'user')
-      }
-    }
-  }
-
   componentDidMount () {
 
     const {event} = this.props
@@ -343,6 +319,30 @@ class EditDocument extends React.Component {
 
     this.props.setDocumentSavedStatus('')
 
+  }
+
+  listenKeyDown (e) {
+    if (e.keyCode === 27 && this.props.printLayout) {
+      //esc press so we need to reset print layout
+      this.props.togglePrintLayout(false)
+    }
+
+    // clear Block format when press ENTER
+    if (e.keyCode === 13) {
+      let currentSelectedFormat = {}
+      const selection = this.editorRef.getSelection()
+      try {
+        currentSelectedFormat = this.editorRef.getFormat(selection)
+      } catch (error) {
+        // TODO: handle error here
+        console.log(error)        
+      }
+
+      if (_.get(currentSelectedFormat, 'heading', false) === true) {
+        const delta = this.editorRef.format('heading', false, 'user')
+        this.updateEditorContent(delta, 'user')
+      }
+    }
   }
 
   onMouseDown (e) {
@@ -972,7 +972,6 @@ class EditDocument extends React.Component {
   }
 
   async _onEditorChange (content, delta, source, editor) {
-
     // update comments list
 
     this.handleUpdateCommentList()

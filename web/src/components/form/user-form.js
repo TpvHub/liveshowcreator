@@ -127,9 +127,11 @@ class UserForm extends React.Component {
   }
 
   get isStaffOrAdmin() {
-    const { roles } = this.props.currentUser
+    if (this.props.currentUser) {
+      const { roles } = this.props.currentUser
 
-    return _.includes(roles, 'staff') || _.includes(roles, 'administrator')
+      return _.includes(roles, 'staff') || _.includes(roles, 'administrator')
+    } else return false
   }
 
   _onChange(e) {

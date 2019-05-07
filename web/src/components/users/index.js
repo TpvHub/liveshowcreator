@@ -133,7 +133,7 @@ class Users extends React.Component {
           updated: _.get(n, 'updated', null),
           actions: this.getActions(n)
         }
-      }).filter(this.filterUsers)
+      })
     })
   }
 

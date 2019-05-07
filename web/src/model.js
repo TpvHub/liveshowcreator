@@ -1,3 +1,14 @@
+const originalClientField = {
+  _id: {},
+  userId: {},
+  teamName: {},
+  teamMembers: {},
+  driveFolderId: {},
+  planId: {},
+  created: {},
+  updated: {},
+}
+
 const clientField = {
   _id: {},
   firstName: {},
@@ -47,6 +58,7 @@ export const models = {
   user: userField,
   client: clientField,
   newClient: clientRegisterFields,
+  originalClient: originalClientField,
   user_role: {
     _id: {},
     roleId: {},

@@ -205,7 +205,7 @@ class Clients extends React.Component {
       <Layout>
         <Container>
           <CustomTable
-            tableName='Users table'
+            tableName='Clients table'
             tableColumnData={columnData}
             data={dataTable}
           />

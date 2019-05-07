@@ -94,7 +94,7 @@ export const login = (user) => {
     const fields = getModelFields('token')
     return new Promise((resolve, reject) => {
 
-      service.mutation('login', user, fields).then((data) => {
+      service.mutation('login', user, { ...fields, ofClient: getModelFields('originalClient') }).then((data) => {
 
         const user = _.get(data, 'user')
         dispatch(setCurrentUser({

@@ -103,9 +103,20 @@ export default class User extends Model {
           }).then(async (token) => {
             _.unset(model, 'password')
             token = _.setWith(token, 'user', model)
+
             token = _.setWith(token, 'client',
               model.roles[0] === 'client' ?
                 await this.database.models().client.findOne({ userId: model._id })
+                : null
+            )
+
+            token = _.setWith(token, 'ofClient',
+              model.roles[0] === 'user' ?
+                await this.database.models().client.findOne({
+                  teamMembers: {
+                    $all: [this.objectId(model._id)]
+                  }
+                })
                 : null
             )
 
@@ -372,6 +383,9 @@ export default class User extends Model {
             client: {
               type: this.database.models().client.schema(),
             },
+            ofClient: {
+              type: this.database.models().client.schema(),
+            }
           })),
         }),
         args: {

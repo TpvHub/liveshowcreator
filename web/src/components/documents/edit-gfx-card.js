@@ -385,12 +385,14 @@ class EditGfxCard extends React.Component {
   }
 }
 
-const mapStateToProps = (state, props) => ({
-  currentUser: getCurrentUser(state),
-  event: state.event,
-  users: getUserSearchList(state),
-  doc: getDocument(state, props)
-})
+const mapStateToProps = (state, props) => {
+  return {
+    currentUser: getCurrentUser(state),
+    event: state.event,
+    users: getUserSearchList(state),
+    doc: getDocument(state, props)
+  }
+}
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   searchUsers,
