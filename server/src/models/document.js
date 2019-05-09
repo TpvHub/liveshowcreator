@@ -955,19 +955,25 @@ export default class Document extends Model {
             const modelRelations = this.relations()
 
             for (let resultIndex in results) {
-              for (let relationIndex in relations) {
+              for (let relationIndex in modelRelations) {
 
-                const relationName = relations[relationIndex]
+                const relationName = relationIndex
                 const relationSetting = _.get(modelRelations, relationName)
+
                 if (relationSetting) {
                   let relationResult = null
-                  const localId = _.get(results[resultIndex],
-                    relationSetting.localField)
+                  const localId = _.get(results[resultIndex], relationSetting.localField)
+                  const foreignField = _.get(relationSetting, 'foreignField')
 
                   if (relationSetting.type === 'belongTo') {
-
                     try {
-                      relationResult = await relationSetting.model.get(localId)
+                      if (foreignField === '_id') {
+                        relationResult = await relationSetting.model.get(localId)
+                      } else {
+                        relationResult = await relationSetting.model.findOne({
+                          [foreignField]: localId
+                        })
+                      }
                     } catch (e) {
 
                     }

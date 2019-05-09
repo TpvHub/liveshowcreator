@@ -1,7 +1,7 @@
 import React from 'react'
 import Layout from '../../layout'
 import styled from 'styled-components'
-import { Menu, MenuItem, IconButton, Button, Tooltip } from '@material-ui/core'
+import { Menu, MenuItem, IconButton, Button, Tooltip, TableCell } from '@material-ui/core'
 import { MoreVert, Add } from '@material-ui/icons'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
@@ -19,6 +19,17 @@ import { history } from '../../hostory'
 import ConfirmDeleteDialog from './confirm-delete-dialog'
 import RenameDialog from './rename-dialog'
 import LoadMore from './load-more'
+
+import CustomTable from '../tables'
+import MenuAction from '../menu-action'
+
+const columnData = [
+  { id: 'title', numeric: false, disablePadding: false, label: 'Title' },
+  { id: 'teamName', numeric: false, disablePadding: false, label: 'Team\'s Name' },
+  { id: 'owner', numeric: false, disablePadding: false, label: 'Owner' },
+  { id: 'driveUsed', numeric: false, disablePadding: false, label: 'Drive used' },
+  { id: 'actions', numeric: false, disablePadding: false, label: 'Actions' },
+];
 
 const Container = styled.div`
  padding: 15px 0;
@@ -137,6 +148,7 @@ class Documents extends React.Component {
 
     this.state = {
       docs: [],
+      dataTable: [],
       anchorEl: null,
       menu: null,
       deleteModel: null,
@@ -157,13 +169,94 @@ class Documents extends React.Component {
       docs: nextProps.docs.map(doc => ({
         ...doc,
         owner: `${_.get(doc, 'user.firstName', '')} ${_.get(doc, 'user.lastName', '')}`
-      }))
+      })),
+      dataTable: nextProps.docs.toArray().map((n, index) => {
+        console.log(n)
+
+        return {
+          id: index + 1,
+          title: _.get(n, 'title', 'n/a'),
+          teamName: _.get(n, 'client.teamName', 'n/a'),
+          owner: `${_.get(n, 'user.firstName', 'n/a')} ${ _.get(n, 'user.lastName', 'n/a')}`,
+          driveUsed: _.get(n, 'driveUsed', 0),
+          actions: this.getActions(n)
+        }
+      })
     })
   }
 
   get hasPermissionAddDoc() {
     const { currentUser } = this.props
     return _.includes(_.get(currentUser, 'roles', []), 'client')
+  }
+
+  getActions = (n) => {
+    const { currentUser } = this.props
+    let isStaffOrAdmin = false
+    const roles = _.get(currentUser, 'roles')
+    if (_.includes(roles, 'administrator') || _.includes(roles, 'staff')) {
+      isStaffOrAdmin = true
+    }
+
+    let menuOptions = [
+      {
+        key: 'open',
+        label: 'Open',
+      },
+    ]
+
+    if (this.hasPermissionAddDoc || isStaffOrAdmin) {
+      menuOptions = [
+
+        {
+          key: 'rename',
+          label: 'Rename',
+        },
+        {
+          key: 'remove',
+          label: 'Remove',
+        },
+        {
+          key: 'open',
+          label: 'Open',
+        },
+
+      ]
+    }
+
+    return (
+      <TableCell numeric>
+        <MenuAction onSelect={(op) => {
+          switch (op.key) {
+
+            case 'open':
+
+              history.push(`/document/${n._id}/edit`)
+
+              break
+            
+            case 'rename': {
+              this.setState({
+                editModel: n,
+              })
+              break;
+            }
+
+            case 'remove':
+
+              this.setState({
+                deleteModel: n,
+              })
+
+              break
+
+            default:
+
+              break
+          }
+        }} options={menuOptions} />
+      </TableCell>
+    )
   }
 
   handleMenuOpen(event, id) {
@@ -260,48 +353,54 @@ class Documents extends React.Component {
   render() {
 
     const { currentUser } = this.props
-    const { docs, menu, anchorEl } = this.state
+    const { docs, menu, anchorEl, dataTable } = this.state
 
     const showList = docs.size > 0
 
-    let isStaffOrAdmin = false
-    const roles = _.get(currentUser, 'roles')
-    if (_.includes(roles, 'administrator') || _.includes(roles, 'staff')) {
-      isStaffOrAdmin = true
-    }
+    // let isStaffOrAdmin = false
+    // const roles = _.get(currentUser, 'roles')
+    // if (_.includes(roles, 'administrator') || _.includes(roles, 'staff')) {
+    //   isStaffOrAdmin = true
+    // }
 
-    let options = [
-      {
-        key: 'open',
-        label: 'Open',
-      },
-    ]
+    // let options = [
+    //   {
+    //     key: 'open',
+    //     label: 'Open',
+    //   },
+    // ]
 
-    if (this.hasPermissionAddDoc || isStaffOrAdmin) {
-      options = [
+    // if (this.hasPermissionAddDoc || isStaffOrAdmin) {
+    //   options = [
 
-        {
-          key: 'rename',
-          label: 'Rename',
-        },
-        {
-          key: 'remove',
-          label: 'Remove',
-        },
-        {
-          key: 'open',
-          label: 'Open',
-        },
+    //     {
+    //       key: 'rename',
+    //       label: 'Rename',
+    //     },
+    //     {
+    //       key: 'remove',
+    //       label: 'Remove',
+    //     },
+    //     {
+    //       key: 'open',
+    //       label: 'Open',
+    //     },
 
-      ]
-    }
+    //   ]
+    // }
 
     return (
       <Layout
         onSearch={this.handleSearch.bind(this)}
         useSearch={true}>
         <Container>
-          {showList && (
+          <CustomTable
+            tableName='Shows table'
+            tableColumnData={columnData}
+            data={dataTable}
+          />
+
+          {/* {showList && (
             <FlexList>
               <FlexListItem className={'document-header'} >
                 <FlexListItemCell
@@ -384,7 +483,7 @@ class Documents extends React.Component {
                 })
               }
             </FlexList>
-          )}
+          )} */}
 
           <LoadMore
             hideButton={false}
