@@ -817,19 +817,24 @@ export default class Document extends Model {
             }
 
             const modelRelations = this.relations()
-            const relations = _.get(args, 'relations')
-
-            for (let i in relations) {
-              const relationName = relations[i]
+            for (let i in modelRelations) {
+              const relationName = i
 
               const relationSettings = _.get(modelRelations, relationName)
               if (relationSettings) {
                 if (relationSettings.type === 'belongTo') {
                   const localId = _.get(result, relationSettings.localField)
+                  const foreignField = _.get(relationSettings, 'foreignField')
 
                   let relationResult = null
                   try {
-                    relationResult = await relationSettings.model.get(localId)
+                    if (foreignField === '_id') {
+                      relationResult = await relationSettings.model.get(localId)
+                    } else {
+                      relationResult = await relationSettings.model.findOne({
+                        [foreignField]: localId
+                      })
+                    }
                   } catch (e) {
 
                   }
@@ -1094,7 +1099,13 @@ export default class Document extends Model {
         model: this.database.models().user,
         fields: ['_id', 'firstName', 'lastName', 'avatar'],
       },
-
+      client: {
+        type: 'belongTo',
+        foreignField: 'userId',
+        localField: 'userId',
+        model: this.database.models().client,
+        fields: ['_id', 'teamMembers', 'teamName'],
+      }
     }
   }
 

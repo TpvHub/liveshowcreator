@@ -99,7 +99,8 @@ export const login = (user) => {
         const user = _.get(data, 'user')
         dispatch(setCurrentUser({
           ...user,
-          client: _.get(data, 'client')
+          client: _.get(data, 'client'),
+          ofClient: _.get(data, 'ofClient')
         }))
         dispatch(setToken(data))
 

@@ -24,6 +24,11 @@ const fields = {
     lastName: true,
     avatar: true,
   },
+  client: {
+    _id: true,
+    teamMembers: true,
+    teamName: true
+  },
 }
 
 const getFields = (fieldObjects = null) => {

@@ -22,14 +22,14 @@ import {
 import { STATUSES, gfxTitleMaxLength } from '../../config'
 import NoteInput from './gfx-note-input'
 import AssetGrid from './asset-grid'
-import {moment} from '../../config'
+import { moment } from '../../config'
 import download from '../../helper/download'
 import { GfxCartTitle } from './gfx-list'
 
-const Container = styled.div `
+const Container = styled.div`
 `
 
-const GfxDate = styled.div `
+const GfxDate = styled.div`
   font-weight: 400;
   font-size: 11px;
   color: rgba(0,0,0,0.5);
@@ -37,7 +37,7 @@ const GfxDate = styled.div `
 
 `
 
-const DivProgress = styled.div `
+const DivProgress = styled.div`
   display: flex;
   color: white;
   p {
@@ -47,7 +47,7 @@ const DivProgress = styled.div `
 
 class EditGfxCard extends React.Component {
 
-  constructor (props) {
+  constructor(props) {
 
     super(props)
 
@@ -73,9 +73,9 @@ class EditGfxCard extends React.Component {
 
   }
 
-  handleSubmit (files = null, old_files = null) {
+  handleSubmit(files = null, old_files = null) {
 
-    const {event, gfx, currentUser, users, docId} = this.props
+    const { event, gfx, currentUser, users, docId } = this.props
 
     const userId = _.get(currentUser, '_id')
     const user = {
@@ -118,26 +118,26 @@ class EditGfxCard extends React.Component {
 
   }
 
-  handleCancel () {
+  handleCancel() {
 
     this.props.cancel()
   }
 
-  handleOpenDrive () {
+  handleOpenDrive() {
 
     this.props.toggleDrive(null, {
       gfxEdit: _.get(this, 'props.gfx')
     })
   }
 
-  componentWillMount () {
+  componentWillMount() {
 
-    this.props.searchUsers('', {limit: 50, skip: 0})
+    this.props.searchUsers('', { limit: 50, skip: 0 })
   }
 
-  componentDidMount () {
+  componentDidMount() {
 
-    const {gfx, docId} = this.props
+    const { gfx, docId } = this.props
 
     const payload = _.get(gfx, 'data')
 
@@ -172,12 +172,12 @@ class EditGfxCard extends React.Component {
     this.props.setDriveEditGfx(gfx)
   }
 
-  getDefaultAssignValue () {
+  getDefaultAssignValue() {
 
     return this.state.assign
   }
 
-  handleRemoveFile (file) {
+  handleRemoveFile(file) {
 
     let files = this.state.files.filter(
       (i) => _.get(i, 'id') !== _.get(file, 'id'))
@@ -187,24 +187,26 @@ class EditGfxCard extends React.Component {
     })
   }
 
-  render () {
+  isUserThisTeam = (u) => {
+    const { doc } = this.props
+    if (doc && _.get(doc, 'client')) {
+      return _.includes(_.get(doc, 'client.teamMembers'), u._id)
+    } else return false
+  }
+
+  render() {
 
     const {
       gfx,
       users,
-      // doc
     } = this.props
 
-    let options = []
-
-    users.forEach((u) => {
-      options.push({
+    let options = users.toArray()
+      .filter(this.isUserThisTeam)
+      .map(u => ({
         label: `${u.firstName} ${u.lastName}`,
         key: u._id,
-      })
-    })
-
-    // const driveId = _.get(doc, 'driveId', null)
+      }))
 
     const defaultStatus = _.get(gfx, 'data.status', '')
 
@@ -235,15 +237,15 @@ class EditGfxCard extends React.Component {
                   for (let i in _files) {
                     const itemFile = _files[i];
                     try {
-                        this.props.showMessage({
-                          isRawBody: true,
-                          body: <DivProgress><CircularProgress /><p>Please wait while your file loads then downloads.</p></DivProgress>,
-                          duration: 60000000,
-                        })
-                        await this.props.downloadFile(itemFile.id).then((data) => {
-                          download(data, itemFile.name, data.type)
-                          this.props.showMessage(null)
-                        })
+                      this.props.showMessage({
+                        isRawBody: true,
+                        body: <DivProgress><CircularProgress /><p>Please wait while your file loads then downloads.</p></DivProgress>,
+                        duration: 60000000,
+                      })
+                      await this.props.downloadFile(itemFile.id).then((data) => {
+                        download(data, itemFile.name, data.type)
+                        this.props.showMessage(null)
+                      })
                     } catch (e) {
                       console.log('Anable download file', e)
                     }
@@ -282,7 +284,7 @@ class EditGfxCard extends React.Component {
                         assign: selected,
                       }, () => this.handleSubmit())
 
-                    }} options={options}/>
+                    }} options={options} />
 
                   <Select
                     className={'gfx-status-select'}
@@ -291,10 +293,10 @@ class EditGfxCard extends React.Component {
                     onChange={(selected) => {
 
                       this.setState({
-                          status: selected,
-                        }, () => this.handleSubmit()
+                        status: selected,
+                      }, () => this.handleSubmit()
                       )
-                    }} options={STATUSES}/>
+                    }} options={STATUSES} />
 
                   <NoteInput
                     onChange={(value) => {
@@ -309,7 +311,7 @@ class EditGfxCard extends React.Component {
                       }, () => this.handleSubmit())
                     }}
                     users={users}
-                    value={_.get(gfx, 'data.body', '')}/>
+                    value={_.get(gfx, 'data.body', '')} />
 
                   {
 
@@ -387,7 +389,7 @@ class EditGfxCard extends React.Component {
 
 const mapStateToProps = (state, props) => {
   return {
-    currentUser: getCurrentUser(state),
+    // currentUser: getCurrentUser(state),
     event: state.event,
     users: getUserSearchList(state),
     doc: getDocument(state, props)
