@@ -272,6 +272,7 @@ class EnhancedTable extends React.Component {
         const { classes, tableColumnData, ExtraFilter } = this.props;
         const { data, order, orderBy, selected, rowsPerPage, page } = this.state;
         const emptyRows = rowsPerPage - Math.min(rowsPerPage, data.size - page * rowsPerPage);
+        // console.log();
 
         return (
             <Paper className={classes.root}>
@@ -337,7 +338,8 @@ class EnhancedTable extends React.Component {
                 </div>
                 <TablePagination
                     component="div"
-                    count={data.size}
+                    // count={data.size}
+                    count={+data.length}
                     rowsPerPage={rowsPerPage}
                     page={page}
                     backIconButtonProps={{

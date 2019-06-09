@@ -4,7 +4,7 @@ import _ from 'lodash'
 const initState = {
   currentUser: null,
   currentToken: null,
-  headerTitle: 'TpvHub Creator',
+  headerTitle: 'TpvHub Show',
 }
 
 export default (state = initState, action) => {

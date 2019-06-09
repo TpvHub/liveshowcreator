@@ -21,7 +21,6 @@ Host producer
 
   Port 22
 
-  HostName 45.79.175.244
 ```
 
 ## Build and Deploy code to server
@@ -60,8 +59,6 @@ npm run deploy
 ### Step 4 Login to TpvHub server and restart node app
 
 ```
-ssh producer
-cd /var/www/showdev.tpvhub.net/app
-npm start
+
 ```
 
