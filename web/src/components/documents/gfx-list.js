@@ -225,40 +225,44 @@ class GfxList extends React.Component {
    */
   handleOnSelectGfx(item, e) {
     // check option button
-    const list = document.getElementsByClassName("menu-option");
-    for (let item of list) {
-      if (item.contains(e.target)) return;
-    }
-    if (isDescendant(document.getElementById(`thumbnail-slider-${_.get(item, 'id')}`), e.target)) {
-      return;
-    }
-
-    const { gfxEdit } = this.props
-
-    if (gfxEdit === _.get(item, 'id')) {
-      // close if click on gfx card title
-      let cardId = `gfx-card-id-${_.get(item, 'id')}`;
-      if (
-        isDescendant(document.getElementById(cardId), e.target) ||
-        cardId == e.target.id
-      ) {
-        this.showEdit(null);
+    try {
+      const list = document.getElementsByClassName("menu-option");
+      for (let item of list) {
+        if (item.contains(e.target)) return;
       }
-      return
-    }
-    const element = _.get(item, 'elements[0]')
-    if (element) {
-      // show edit
-      this.showEdit(_.get(item, 'id'))
+      if (isDescendant(document.getElementById(`thumbnail-slider-${_.get(item, 'id')}`), e.target)) {
+        return;
+      }
 
-      this.props.event.emit(ON_EDITOR_SET_MY_CURSOR, {
-        range: {
-          index: _.get(item, 'index'),
-          length: 0,
-        },
-        source: 'silent',
-      })
+      const { gfxEdit } = this.props
 
+      if (gfxEdit === _.get(item, 'id')) {
+        // close if click on gfx card title
+        let cardId = `gfx-card-id-${_.get(item, 'id')}`;
+        if (
+          isDescendant(document.getElementById(cardId), e.target) ||
+          cardId == e.target.id
+        ) {
+          this.showEdit(null);
+        }
+        return
+      }
+      const element = _.get(item, 'elements[0]')
+      if (element) {
+        // show edit
+        this.showEdit(_.get(item, 'id'))
+
+        this.props.event.emit(ON_EDITOR_SET_MY_CURSOR, {
+          range: {
+            index: _.get(item, 'index'),
+            length: 0,
+          },
+          source: 'silent',
+        })
+
+      }
+    } catch(err) {
+      
     }
 
   }

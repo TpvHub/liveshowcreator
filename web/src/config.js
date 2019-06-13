@@ -40,13 +40,15 @@ export const moment = MomentJs
 
 export const gfxTitleMaxLength = 30
 
-const productionConfig = {
-  url: 'https://showdev3.tpvhub.net',
-  api: 'https://showdev3.tpvhub.net/api',
-  webSocketUrl: 'wss://showdev3.tpvhub.net',
-  fileUrl: 'https://showdev3.tpvhub.net/files',
-}
 const localIp = '127.0.0.1'
+
+const productionConfig = {
+  url: localIp,
+  api: '/api',
+  webSocketUrl: 'wss://127.0.0.1',
+  fileUrl: '/files',
+}
+
 const SERVER_PORT = 3001
 const developmentConfig = {
   url: `http://${localIp}:${SERVER_PORT}`,
@@ -55,4 +57,5 @@ const developmentConfig = {
   fileUrl: `http://${localIp}:${SERVER_PORT}/files`,
 }
 
-export const config = production ? productionConfig : developmentConfig
+export const config = production ? developmentConfig : developmentConfig
+// export const config = production ? productionConfig : developmentConfig

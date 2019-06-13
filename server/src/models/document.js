@@ -579,25 +579,53 @@ export default class Document extends Model {
             if (saveError) {
               return reject(saveError)
             }
-            let relations = []
-            _.each(this.relations(), (v, k) => {
-              if (v.type === 'belongTo') {
-                relations.push({ name: k, relation: v })
-              }
-            })
-            for (let i in relations) {
-              const relation = relations[i]
-              const localField = _.get(relation, 'relation.localField')
-              const relationId = _.get(model, localField)
-              let relationModel = null
-              try {
-                relationModel = await relation.relation.model.get(relationId)
-              } catch (e) {
+
+            // let relations = []
+            // _.each(this.relations(), (v, k) => {
+            //   if (v.type === 'belongTo') {
+            //     relations.push({ name: k, relation: v })
+            //   }
+            // })
+            // for (let i in relations) {
+            //   const relation = relations[i]
+            //   const localField = _.get(relation, 'relation.localField')
+            //   const relationId = _.get(model, localField)
+            //   let relationModel = null
+            //   try {
+            //     relationModel = await relation.relation.model.get(relationId)
+            //   } catch (e) {
+
+            //   }
+            //   model[relation.name] = relationModel
+            // }
+
+            const modelRelations = this.relations()
+            for (let i in modelRelations) {
+              const relationName = i
+
+              const relationSettings = _.get(modelRelations, relationName)
+              if (relationSettings) {
+                if (relationSettings.type === 'belongTo') {
+                  const localId = _.get(model, relationSettings.localField)
+                  const foreignField = _.get(relationSettings, 'foreignField')
+
+                  let relationResult = null
+                  try {
+                    if (foreignField === '_id') {
+                      relationResult = await relationSettings.model.get(localId)
+                    } else {
+                      relationResult = await relationSettings.model.findOne({
+                        [foreignField]: localId
+                      })
+                    }
+                  } catch (e) {
+
+                  }
+                  model[relationName] = relationResult
+                }
 
               }
-              model[relation.name] = relationModel
             }
-
             return resolve(model)
 
           })
