@@ -54,7 +54,7 @@
     "express-graphql": "^0.6.12",
     "formidable": "^1.2.1",
     "google-auth-library": "^1.4.0",
-    "googleapis": "^30.0.0",
+    "googleapis": "^59.0.0",
     "graphql": "^0.13.2",
     "he": "^1.1.1",
     "html-pdf": "^2.2.0",
